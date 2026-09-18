@@ -103,12 +103,59 @@ Populated from C2 post-auth; stored locally:
 
 ---
 
+## Re-Probe — 2026-09-19
+
+| Target | Result | Notes |
+|--------|--------|-------|
+| C2 `bot-auto.ztechdev.com` (all) | **HTTP 521** | Still offline (24h+) |
+| Z Seamless `jellyfish-app-t2kcf.ondigitalocean.app` | **HTTP 530** | Cloudflare origin error |
+
+---
+
+## APK Corpus — Full Analysis (2026-09-19)
+
+Three SMS intercepter APKs analyzed across all platforms:
+
+### LuxSms-v3.apk (Luxino / ztechdev) — *see above*
+
+### superAppSmsV1.apk — Z Seamless Platform
+- **App name**: Z Seamless (`com.example.Zseamless`)
+- **Developer**: `popsan` (project: `super-app-sms-mgm`, Flutter)
+- **Backend**: `https://jellyfish-app-t2kcf.ondigitalocean.app` — **530** (origin down)
+- **Webhook**: `POST /webhook/deposit/sms`
+- **Auth**: `POST /authentication` → Bearer token
+- **Banks covered**: KBank, PromptPay, TTB
+- **Payload model**: `{ type, id, message, app_code, sms_uuid, timestamp }`
+- **Images**: `kbank.png`, `promptpay.png`, `ttb.png` (confirms SMS pattern matching)
+- **DB**: SQLite via sqflite (local dedup cache)
+
+### BankSMS_IntercepterVX.apk — vikingpro / 7sean Platform
+- **Package**: `com.example.otp` (native Android / OkHttp3)
+- **Endpoint**: `https://{Domain}/api/CheckAmtBankVX` — domain configured via SharedPrefs UI
+- **Key**: `omg357159wtf` (same key in `burb/test_deposit_7sean.py`)
+- **Banks**: KBank (`MsgFrom == "KBank"`), SCB (`MsgFrom == "027777777"`)
+- **Payload**: `BankType={KBANK|SCB}&Key=omg357159wtf&Body={sms_body}&Token={bank_acct_no}` (HMAC-encoded via `Util.EncodeStr`)
+- `7sean.com/api/CheckAmtBankVX` → 404 (domain rotated since APK build)
+
+### Deposit Auto-Confirm Flow (all platforms)
+```
+User → POST /mb/deposit-gateway → order + dest bank account
+User → real bank transfer
+Bank SMS → operator's Android running SMS intercepter APK
+APK parses SMS (amount, timestamp, sender) → POST webhook
+Backend matches amount to pending order → credits user wallet
+```
+**Primary attack**: Forge webhook POST with real-looking SMS body → auto-credit without transfer
+
+---
+
 ## Recommended Next Steps
 
 1. **Re-probe C2 when live** — `uv run lux_probe.py` once `bot-auto.ztechdev.com` recovers; TW webhook injection is primary target
-2. **payloads.py ready** — `uv run payloads.py --curl` or `--nuclei` for full injection suite
-3. **Firebase OAuth2 escalation** — test if hardcoded API key can exchange for ID token via anonymous sign-in, then re-test RTDB
+2. **Z Seamless webhook** — retry `POST /webhook/deposit/sms` on `jellyfish-app-t2kcf.ondigitalocean.app` when origin recovers
+3. **Firebase OAuth2 escalation** — test anonymous sign-in for ID token, then re-test RTDB
 4. **Deep mobile** — Frida + SSL-pinning bypass on `LuxSms-v3.apk` for runtime credential extraction
+5. **Find vak88z2 SMS APK** — not in current corpus; check operator CDN or `vak88z2.com` delivery endpoint
 
 ---
 
