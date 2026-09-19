@@ -153,9 +153,81 @@ Backend matches amount to pending order → credits user wallet
 
 1. **Re-probe C2 when live** — `uv run lux_probe.py` once `bot-auto.ztechdev.com` recovers; TW webhook injection is primary target
 2. **Z Seamless webhook** — retry `POST /webhook/deposit/sms` on `jellyfish-app-t2kcf.ondigitalocean.app` when origin recovers
-3. **Firebase OAuth2 escalation** — test anonymous sign-in for ID token, then re-test RTDB
+3. **Firebase OAuth2 escalation** — anonymous sign-in works (tested 2026-09-19), RTDB locked; try `pbapi`/`bgapi` with Firebase token if auth flow changes
 4. **Deep mobile** — Frida + SSL-pinning bypass on `LuxSms-v3.apk` for runtime credential extraction
-5. **Find vak88z2 SMS APK** — not in current corpus; check operator CDN or `vak88z2.com` delivery endpoint
+5. **bgapi re-auth** — once valid admin JWT obtained, probe `/bo/member-list`, `/bo/deposit-list`, `/bo/report`
+
+---
+
+## 2026-09-19 — Manage Panel Recon & New Gateways
+
+### Nuxt Runtime Config Exposed (manage.vak88z3.com)
+Retrieved via `window.$nuxt.context.$config` in browser console:
+```json
+{
+  "web_name": "Vak88",
+  "web_prefix": "VAK88",
+  "firebaseConfig": {
+    "apiKey": "AIzaSyAELPsIAYigvKgJBAsbl_3WM9_tNOr5UiE",
+    "authDomain": "vak88z.firebaseapp.com",
+    "databaseURL": "https://vak88z-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "projectId": "vak88z",
+    "storageBucket": "vak88z.appspot.com",
+    "messagingSenderId": "973194463010",
+    "appId": "1:973194463010:web:609a9ea34c3b085196477b"
+  },
+  "api_url": "http://vak88-api:20000",
+  "api_url_go": "http://vak88-api-go-api-backoffice:20000",
+  "api_url_public": "http://vak88-api-go-api-public:20000",
+  "ex_api_url": "https://af6efb584a3d317b5a11ab6209b88e1bapi.asdgapicenterssdo.com",
+  "ex_api_url_bo_go": "https://af6efb584a3d317b5a11ab6209b88e1bbgapi.asdgapicenterssdo.com",
+  "ex_api_url_pb_go": "https://af6efb584a3d317b5a11ab6209b88e1bpbapi.asdgapicenterssdo.com"
+}
+```
+**Impact**: Internal K8s hostnames, Firebase project config, and ALL gateway URLs leaked server-side.
+
+### Manage Panel Auth Endpoint (from JS bundle)
+```
+POST https://manage.vak88z3.com/bo/authentication
+  body: {username, password}
+  returns: {accessToken: "Bearer..."}
+
+GET  https://manage.vak88z3.com/bo/admin-v2    → user profile
+POST https://manage.vak88z3.com/bo/logout
+```
+Cookie: `luxino.auth_token` (prefix from Nuxt Auth module)
+
+### Gateway Map (confirmed 2026-09-19)
+All use prefix `af6efb584a3d317b5a11ab6209b88e1b`:
+| Gateway | URL Suffix | Purpose | Status |
+|---------|-----------|---------|--------|
+| `api`   | `api.asdgapicenterssdo.com` | Node.js/FeathersJS main | 404/500 |
+| `mgapi` | `mgapi.asdgapicenterssdo.com` | Member JWT gateway | 401 (needs member JWT) |
+| `bgapi` | `bgapi.asdgapicenterssdo.com` | Backoffice Go API | 401 (needs admin JWT) |
+| `pbapi` | `pbapi.asdgapicenterssdo.com` | Public Go API | 404 all paths |
+
+`api` gateway `/bo/authentication` returns **500 GeneralError** (route exists, DB offline).  
+NoSQL injection payloads (`$gt`, `$regex`) also return 500 — backend is down, not WAF-blocked.
+
+### GCS Bucket luxino-public (Publicly Readable)
+7311 objects enumerated. Key findings:
+- `AppV2/superAppSmsV1.apk` (72MB) — Z Seamless Flutter SMS intercepter (already analyzed)
+- `app-sms/LuxSms-v3.apk` (8.3MB) — Luxino SMS intercepter (already analyzed)
+- `app-sms/luxsmsV2.2.0.apk`, `luxapp2.0.0.apk` — older Luxino APK versions
+- `test_data/kbank-test.apk` — fake KBank app for testing SMS intercepters
+  - Package: `com.kasikorn.retail.mbanking.wap` (KBank lookalike)
+  - Hardcoded: `http://rt10.kasikornbank.com` (KBank internal test server)
+  - Used by operators to generate test bank SMS
+
+**Operators on platform (from powered_by/ logos)**:
+Z Gaming Asia, Keris777, MVP, Weza, 1XZ, Galaxy, Nitro77
+
+### Firebase Project vak88z
+- **Anonymous sign-in**: Enabled (tested, got ID token)
+- **Email/password**: Disabled (`PASSWORD_LOGIN_DISABLED`)
+- **RTDB**: Locked — 401 even with anonymous token
+- **Firestore**: Not enabled
+- **Storage**: `vak88z.appspot.com` bucket not found (likely different bucket)
 
 ---
 
