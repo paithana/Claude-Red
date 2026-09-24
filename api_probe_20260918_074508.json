@@ -1,0 +1,474 @@
+{
+  "ts": "2026-09-18T07:45:15.661991+00:00",
+  "api_host": "54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com",
+  "token_sub": "266d74e3-d6ca-47eb-b9ac-b8c45574bad4",
+  "probes": 44,
+  "hits": [
+    {
+      "label": "GET /mb/users",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/users?_t=1789717508663",
+      "status": 200,
+      "snippet": "{\"total\":1,\"limit\":10,\"skip\":0,\"data\":[{\"id\":\"266d74e3-d6ca-47eb-b9ac-b8c45574bad4\",\"username\":\"0972571110\",\"first_name\":\"ธนวัฒน์\",\"last_name\":\"พุฒอินทร์\",\"user_in_game\":\"bc183c88b731bd08\",\"gender\":\"\",\"DOB\":\"\",\"line_id\":\"\",\"payment_accounts\":[{\"account_id\":\"a62dea72-6439-11f1-a811-0644d6fb2ecf\",\"bank_currency_information_id\":\"4a5dab48-21ab-4bc0-8d31-6d9c15ba2ee0\",\"bank_branch_information_id\":null,",
+      "ts": "2026-09-18T07:45:08.784426+00:00"
+    },
+    {
+      "label": "GET /mb/payment-bank-information",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/payment-bank-information?include=true&deposit=true&payment_type_id=f9eb6b6d-37ed-4148-8a12-320b7d3a647c&currency_language_id=aea7d307-bae6-4cc9-806c-b8220cbc996f&language_id=d9701bb6-c972-4898-a96e-81101baf5acf",
+      "status": 200,
+      "snippet": "{\"data\":{\"id\":\"2c595a21-9bba-4d06-ab30-5dc3c97dacb9\",\"payment_type_id\":\"f9eb6b6d-37ed-4148-8a12-320b7d3a647c\",\"bank_information_id\":\"78db40d6-edd9-4a58-84ba-5179780c068f\",\"currency_id\":\"718f60ce-c8a4-4820-8c84-2bd7f84a351c\",\"bank_account_no\":\"236-2-29795-0\",\"payment_name\":\"บจก. เจริญสุข เทรด กรุ๊ป\",\"is_active\":1,\"fee\":0,\"slip_status\":false,\"min_deposit\":0,\"max_deposit\":0,\"shortcuts\":[],\"default_sh",
+      "ts": "2026-09-18T07:45:08.955479+00:00"
+    },
+    {
+      "label": "QR forge: amount_5000",
+      "method": "POST",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/auto-slip-deposit/check",
+      "status": 200,
+      "snippet": "\"success\"",
+      "ts": "2026-09-18T07:45:11.191481+00:00"
+    },
+    {
+      "label": "QR forge: amount_null",
+      "method": "POST",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/auto-slip-deposit/check",
+      "status": 200,
+      "snippet": "\"success\"",
+      "ts": "2026-09-18T07:45:11.319267+00:00"
+    },
+    {
+      "label": "QR forge: ref_modified",
+      "method": "POST",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/auto-slip-deposit/check",
+      "status": 200,
+      "snippet": "\"success\"",
+      "ts": "2026-09-18T07:45:11.451535+00:00"
+    },
+    {
+      "label": "QR forge: empty_qr",
+      "method": "POST",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/auto-slip-deposit/check",
+      "status": 200,
+      "snippet": "\"success\"",
+      "ts": "2026-09-18T07:45:11.573145+00:00"
+    },
+    {
+      "label": "QR forge: json_qr",
+      "method": "POST",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/auto-slip-deposit/check",
+      "status": 200,
+      "snippet": "\"success\"",
+      "ts": "2026-09-18T07:45:11.840199+00:00"
+    },
+    {
+      "label": "GET /mb/users",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/users",
+      "status": 200,
+      "snippet": "{\"total\":1,\"limit\":10,\"skip\":0,\"data\":[{\"id\":\"266d74e3-d6ca-47eb-b9ac-b8c45574bad4\",\"username\":\"0972571110\",\"first_name\":\"ธนวัฒน์\",\"last_name\":\"พุฒอินทร์\",\"user_in_game\":\"bc183c88b731bd08\",\"gender\":\"\",\"DOB\":\"\",\"line_id\":\"\",\"payment_accounts\":[{\"account_id\":\"a62dea72-6439-11f1-a811-0644d6fb2ecf\",\"bank_currency_information_id\":\"4a5dab48-21ab-4bc0-8d31-6d9c15ba2ee0\",\"bank_branch_information_id\":null,",
+      "ts": "2026-09-18T07:45:11.951250+00:00"
+    },
+    {
+      "label": "GET /mb/wallet",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/wallet",
+      "status": 200,
+      "snippet": "{\"total\":1,\"limit\":10,\"skip\":0,\"data\":[{\"id\":\"f7a76d37-0398-4294-a1ae-12098377e9e3\",\"balance\":0.95,\"currency\":{\"id\":\"\",\"name\":\"\",\"code\":\"\",\"symbol\":\"\",\"is_active\":1,\"is_following\":0,\"is_crypto\":0,\"enable_decimal\":0},\"pointData\":{\"point\":1895.94,\"badge_point\":\"https://storage.googleapis.com/we88z/point_images/bfb93eba-2a57-4ebd-9cb2-f50d57cb355a.webp\",\"is_display\":1,\"is_active\":1},\"turn_deposit\":59",
+      "ts": "2026-09-18T07:45:12.248673+00:00"
+    },
+    {
+      "label": "GET /mb/payment-bank-information",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/payment-bank-information",
+      "status": 200,
+      "snippet": "{\"data\":{\"id\":\"\",\"payment_type_id\":\"\",\"bank_information_id\":\"\",\"currency_id\":\"\",\"bank_account_no\":\"\",\"payment_name\":\"\",\"is_active\":0,\"fee\":0,\"slip_status\":false,\"min_deposit\":0,\"max_deposit\":0,\"shortcuts\":null,\"default_shortcut\":0,\"payment_type\":{\"id\":\"\",\"payment_type_code\":\"\",\"payment_type_name\":\"\",\"payment_type_image\":\"\",\"default_images_url\":\"\",\"category\":\"\",\"deposit_type\":\"\",\"is_active\":0,\"paym",
+      "ts": "2026-09-18T07:45:12.757893+00:00"
+    },
+    {
+      "label": "BOLA payment_type_id=00000000...",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/payment-bank-information?include=true&deposit=true&payment_type_id=00000000-0000-0000-0000-000000000001&currency_language_id=aea7d307-bae6-4cc9-806c-b8220cbc996f&language_id=d9701bb6-c972-4898-a96e-81101baf5acf",
+      "status": 200,
+      "snippet": "{\"data\":{\"id\":\"\",\"payment_type_id\":\"\",\"bank_information_id\":\"\",\"currency_id\":\"\",\"bank_account_no\":\"\",\"payment_name\":\"\",\"is_active\":0,\"fee\":0,\"slip_status\":false,\"min_deposit\":0,\"max_deposit\":0,\"shortcuts\":null,\"default_shortcut\":0,\"payment_type\":{\"id\":\"\",\"payment_type_code\":\"\",\"payment_type_name\":\"\",\"payment_type_image\":\"\",\"default_images_url\":\"\",\"category\":\"\",\"deposit_type\":\"\",\"is_active\":0,\"paym",
+      "ts": "2026-09-18T07:45:15.021420+00:00"
+    },
+    {
+      "label": "BOLA payment_type_id=f9eb6b6d...",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/payment-bank-information?include=true&deposit=true&payment_type_id=f9eb6b6d-37ed-4148-8a12-320b7d3a647c&currency_language_id=aea7d307-bae6-4cc9-806c-b8220cbc996f&language_id=d9701bb6-c972-4898-a96e-81101baf5acf",
+      "status": 200,
+      "snippet": "{\"data\":{\"id\":\"2c595a21-9bba-4d06-ab30-5dc3c97dacb9\",\"payment_type_id\":\"f9eb6b6d-37ed-4148-8a12-320b7d3a647c\",\"bank_information_id\":\"78db40d6-edd9-4a58-84ba-5179780c068f\",\"currency_id\":\"718f60ce-c8a4-4820-8c84-2bd7f84a351c\",\"bank_account_no\":\"236-2-29795-0\",\"payment_name\":\"บจก. เจริญสุข เทรด กรุ๊ป\",\"is_active\":1,\"fee\":0,\"slip_status\":false,\"min_deposit\":0,\"max_deposit\":0,\"shortcuts\":[],\"default_sh",
+      "ts": "2026-09-18T07:45:15.155474+00:00"
+    },
+    {
+      "label": "BOLA payment_type_id=aea7d307...",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/payment-bank-information?include=true&deposit=true&payment_type_id=aea7d307-bae6-4cc9-806c-b8220cbc996f&currency_language_id=aea7d307-bae6-4cc9-806c-b8220cbc996f&language_id=d9701bb6-c972-4898-a96e-81101baf5acf",
+      "status": 200,
+      "snippet": "{\"data\":{\"id\":\"\",\"payment_type_id\":\"\",\"bank_information_id\":\"\",\"currency_id\":\"\",\"bank_account_no\":\"\",\"payment_name\":\"\",\"is_active\":0,\"fee\":0,\"slip_status\":false,\"min_deposit\":0,\"max_deposit\":0,\"shortcuts\":null,\"default_shortcut\":0,\"payment_type\":{\"id\":\"\",\"payment_type_code\":\"\",\"payment_type_name\":\"\",\"payment_type_image\":\"\",\"default_images_url\":\"\",\"category\":\"\",\"deposit_type\":\"\",\"is_active\":0,\"paym",
+      "ts": "2026-09-18T07:45:15.278008+00:00"
+    },
+    {
+      "label": "POST auto-slip mass-assign",
+      "method": "POST",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/auto-slip-deposit/check",
+      "status": 200,
+      "snippet": "\"success\"",
+      "ts": "2026-09-18T07:45:15.387689+00:00"
+    }
+  ],
+  "results": [
+    {
+      "label": "GET /mb/users",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/users?_t=1789717508663",
+      "status": 200,
+      "snippet": "{\"total\":1,\"limit\":10,\"skip\":0,\"data\":[{\"id\":\"266d74e3-d6ca-47eb-b9ac-b8c45574bad4\",\"username\":\"0972571110\",\"first_name\":\"ธนวัฒน์\",\"last_name\":\"พุฒอินทร์\",\"user_in_game\":\"bc183c88b731bd08\",\"gender\":\"\",\"DOB\":\"\",\"line_id\":\"\",\"payment_accounts\":[{\"account_id\":\"a62dea72-6439-11f1-a811-0644d6fb2ecf\",\"bank_currency_information_id\":\"4a5dab48-21ab-4bc0-8d31-6d9c15ba2ee0\",\"bank_branch_information_id\":null,",
+      "ts": "2026-09-18T07:45:08.784426+00:00"
+    },
+    {
+      "label": "GET /mb/payment-bank-information",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/payment-bank-information?include=true&deposit=true&payment_type_id=f9eb6b6d-37ed-4148-8a12-320b7d3a647c&currency_language_id=aea7d307-bae6-4cc9-806c-b8220cbc996f&language_id=d9701bb6-c972-4898-a96e-81101baf5acf",
+      "status": 200,
+      "snippet": "{\"data\":{\"id\":\"2c595a21-9bba-4d06-ab30-5dc3c97dacb9\",\"payment_type_id\":\"f9eb6b6d-37ed-4148-8a12-320b7d3a647c\",\"bank_information_id\":\"78db40d6-edd9-4a58-84ba-5179780c068f\",\"currency_id\":\"718f60ce-c8a4-4820-8c84-2bd7f84a351c\",\"bank_account_no\":\"236-2-29795-0\",\"payment_name\":\"บจก. เจริญสุข เทรด กรุ๊ป\",\"is_active\":1,\"fee\":0,\"slip_status\":false,\"min_deposit\":0,\"max_deposit\":0,\"shortcuts\":[],\"default_sh",
+      "ts": "2026-09-18T07:45:08.955479+00:00"
+    },
+    {
+      "label": "IDOR alg:none sub=00000000...",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/users?_t=1789717508955",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-18T07:45:09.067331+00:00"
+    },
+    {
+      "label": "IDOR alg:none sub=00000000...",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/users?_t=1789717509067",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-18T07:45:09.191179+00:00"
+    },
+    {
+      "label": "IDOR alg:none sub=11111111...",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/users?_t=1789717509191",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-18T07:45:09.319742+00:00"
+    },
+    {
+      "label": "IDOR alg:none sub=f3d46cc4...",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/users?_t=1789717509319",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-18T07:45:09.443113+00:00"
+    },
+    {
+      "label": "JWT alg:none admin=true",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/users",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-18T07:45:09.555191+00:00"
+    },
+    {
+      "label": "POST auto-slip/check (real QR replay)",
+      "method": "POST",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/auto-slip-deposit/check",
+      "status": 400,
+      "snippet": "{\"name\":\"BadRequest\",\"message\":{\"bd\":\"এই স্লিপটি ইতিমধ্যে ব্যবহার করা হয়েছে\",\"cn\":\"Internal Server Error\",\"en\":\"This slip has already been used.\",\"es\":\"Este resbalón ya ha sido utilizado.\",\"id\":\"Slip ini sudah digunakan.\",\"in\":\"Internal Server Error\",\"jp\":\"この伝票はすでに使用されています。\",\"ke\":\"Hierdie strokie is reeds gebruik.\",\"kh\":\"ស្លីបនេះបានប្រើរួចហើយ។\",\"kr\":\"Internal Server Error\",\"la\":\"ໃບນີ້ຖືກໃຊ້ແລ້ວ.\",",
+      "ts": "2026-09-18T07:45:11.070190+00:00"
+    },
+    {
+      "label": "QR forge: amount_5000",
+      "method": "POST",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/auto-slip-deposit/check",
+      "status": 200,
+      "snippet": "\"success\"",
+      "ts": "2026-09-18T07:45:11.191481+00:00"
+    },
+    {
+      "label": "QR forge: amount_null",
+      "method": "POST",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/auto-slip-deposit/check",
+      "status": 200,
+      "snippet": "\"success\"",
+      "ts": "2026-09-18T07:45:11.319267+00:00"
+    },
+    {
+      "label": "QR forge: ref_modified",
+      "method": "POST",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/auto-slip-deposit/check",
+      "status": 200,
+      "snippet": "\"success\"",
+      "ts": "2026-09-18T07:45:11.451535+00:00"
+    },
+    {
+      "label": "QR forge: empty_qr",
+      "method": "POST",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/auto-slip-deposit/check",
+      "status": 200,
+      "snippet": "\"success\"",
+      "ts": "2026-09-18T07:45:11.573145+00:00"
+    },
+    {
+      "label": "QR forge: sql_qr",
+      "method": "POST",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/auto-slip-deposit/check",
+      "status": 403,
+      "snippet": "<!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 7]>    <html class=\"no-js ie7 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 8]>    <html class=\"no-js ie8 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if gt IE 8]><!--> <html class=\"no-js\" lang=\"en-US\"> <!--<![endif]-->\n<head>\n<title>Attention Required! | Cloudflare</title>\n<meta charset=\"UTF-8\" />\n<meta",
+      "ts": "2026-09-18T07:45:11.660476+00:00"
+    },
+    {
+      "label": "QR forge: json_qr",
+      "method": "POST",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/auto-slip-deposit/check",
+      "status": 200,
+      "snippet": "\"success\"",
+      "ts": "2026-09-18T07:45:11.840199+00:00"
+    },
+    {
+      "label": "GET /mb/users",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/users",
+      "status": 200,
+      "snippet": "{\"total\":1,\"limit\":10,\"skip\":0,\"data\":[{\"id\":\"266d74e3-d6ca-47eb-b9ac-b8c45574bad4\",\"username\":\"0972571110\",\"first_name\":\"ธนวัฒน์\",\"last_name\":\"พุฒอินทร์\",\"user_in_game\":\"bc183c88b731bd08\",\"gender\":\"\",\"DOB\":\"\",\"line_id\":\"\",\"payment_accounts\":[{\"account_id\":\"a62dea72-6439-11f1-a811-0644d6fb2ecf\",\"bank_currency_information_id\":\"4a5dab48-21ab-4bc0-8d31-6d9c15ba2ee0\",\"bank_branch_information_id\":null,",
+      "ts": "2026-09-18T07:45:11.951250+00:00"
+    },
+    {
+      "label": "GET /mb/balance",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/balance",
+      "status": 404,
+      "snippet": "",
+      "ts": "2026-09-18T07:45:12.135566+00:00"
+    },
+    {
+      "label": "GET /mb/wallet",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/wallet",
+      "status": 200,
+      "snippet": "{\"total\":1,\"limit\":10,\"skip\":0,\"data\":[{\"id\":\"f7a76d37-0398-4294-a1ae-12098377e9e3\",\"balance\":0.95,\"currency\":{\"id\":\"\",\"name\":\"\",\"code\":\"\",\"symbol\":\"\",\"is_active\":1,\"is_following\":0,\"is_crypto\":0,\"enable_decimal\":0},\"pointData\":{\"point\":1895.94,\"badge_point\":\"https://storage.googleapis.com/we88z/point_images/bfb93eba-2a57-4ebd-9cb2-f50d57cb355a.webp\",\"is_display\":1,\"is_active\":1},\"turn_deposit\":59",
+      "ts": "2026-09-18T07:45:12.248673+00:00"
+    },
+    {
+      "label": "GET /mb/transactions",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/transactions",
+      "status": 404,
+      "snippet": "",
+      "ts": "2026-09-18T07:45:12.367244+00:00"
+    },
+    {
+      "label": "GET /mb/deposit/history",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/deposit/history",
+      "status": 404,
+      "snippet": "",
+      "ts": "2026-09-18T07:45:12.496946+00:00"
+    },
+    {
+      "label": "GET /mb/withdraw/history",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/withdraw/history",
+      "status": 404,
+      "snippet": "",
+      "ts": "2026-09-18T07:45:12.617762+00:00"
+    },
+    {
+      "label": "GET /mb/payment-bank-information",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/payment-bank-information",
+      "status": 200,
+      "snippet": "{\"data\":{\"id\":\"\",\"payment_type_id\":\"\",\"bank_information_id\":\"\",\"currency_id\":\"\",\"bank_account_no\":\"\",\"payment_name\":\"\",\"is_active\":0,\"fee\":0,\"slip_status\":false,\"min_deposit\":0,\"max_deposit\":0,\"shortcuts\":null,\"default_shortcut\":0,\"payment_type\":{\"id\":\"\",\"payment_type_code\":\"\",\"payment_type_name\":\"\",\"payment_type_image\":\"\",\"default_images_url\":\"\",\"category\":\"\",\"deposit_type\":\"\",\"is_active\":0,\"paym",
+      "ts": "2026-09-18T07:45:12.757893+00:00"
+    },
+    {
+      "label": "GET /mb/auto-slip-deposit",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/auto-slip-deposit",
+      "status": 404,
+      "snippet": "",
+      "ts": "2026-09-18T07:45:12.867881+00:00"
+    },
+    {
+      "label": "GET /mb/deposit",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/deposit",
+      "status": 404,
+      "snippet": "",
+      "ts": "2026-09-18T07:45:13.002145+00:00"
+    },
+    {
+      "label": "POST /mb/deposit",
+      "method": "POST",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/deposit",
+      "status": 404,
+      "snippet": "",
+      "ts": "2026-09-18T07:45:13.140989+00:00"
+    },
+    {
+      "label": "GET /mb/withdraw",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/withdraw",
+      "status": 404,
+      "snippet": "",
+      "ts": "2026-09-18T07:45:13.243399+00:00"
+    },
+    {
+      "label": "POST /mb/withdraw",
+      "method": "POST",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/withdraw",
+      "status": 404,
+      "snippet": "",
+      "ts": "2026-09-18T07:45:13.372791+00:00"
+    },
+    {
+      "label": "GET /mb/bonus",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/bonus",
+      "status": 404,
+      "snippet": "",
+      "ts": "2026-09-18T07:45:13.496610+00:00"
+    },
+    {
+      "label": "GET /mb/promotion",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/promotion",
+      "status": 404,
+      "snippet": "",
+      "ts": "2026-09-18T07:45:13.639376+00:00"
+    },
+    {
+      "label": "GET /mb/referral",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/referral",
+      "status": 404,
+      "snippet": "",
+      "ts": "2026-09-18T07:45:13.748062+00:00"
+    },
+    {
+      "label": "GET /mb/members",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/members",
+      "status": 404,
+      "snippet": "",
+      "ts": "2026-09-18T07:45:13.875962+00:00"
+    },
+    {
+      "label": "GET /mb/admin",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/admin",
+      "status": 404,
+      "snippet": "",
+      "ts": "2026-09-18T07:45:13.997156+00:00"
+    },
+    {
+      "label": "GET /mb/report",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/report",
+      "status": 404,
+      "snippet": "",
+      "ts": "2026-09-18T07:45:14.133205+00:00"
+    },
+    {
+      "label": "GET /mb/agents",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/agents",
+      "status": 404,
+      "snippet": "",
+      "ts": "2026-09-18T07:45:14.256643+00:00"
+    },
+    {
+      "label": "GET /mb/operators",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/operators",
+      "status": 404,
+      "snippet": "",
+      "ts": "2026-09-18T07:45:14.368408+00:00"
+    },
+    {
+      "label": "GET /api/users",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/api/users",
+      "status": 404,
+      "snippet": "",
+      "ts": "2026-09-18T07:45:14.518907+00:00"
+    },
+    {
+      "label": "GET /api/admin",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/api/admin",
+      "status": 404,
+      "snippet": "",
+      "ts": "2026-09-18T07:45:14.638108+00:00"
+    },
+    {
+      "label": "GET /health",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/health",
+      "status": 404,
+      "snippet": "",
+      "ts": "2026-09-18T07:45:14.753964+00:00"
+    },
+    {
+      "label": "GET /",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/",
+      "status": 404,
+      "snippet": "",
+      "ts": "2026-09-18T07:45:14.868534+00:00"
+    },
+    {
+      "label": "BOLA payment_type_id=00000000...",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/payment-bank-information?include=true&deposit=true&payment_type_id=00000000-0000-0000-0000-000000000001&currency_language_id=aea7d307-bae6-4cc9-806c-b8220cbc996f&language_id=d9701bb6-c972-4898-a96e-81101baf5acf",
+      "status": 200,
+      "snippet": "{\"data\":{\"id\":\"\",\"payment_type_id\":\"\",\"bank_information_id\":\"\",\"currency_id\":\"\",\"bank_account_no\":\"\",\"payment_name\":\"\",\"is_active\":0,\"fee\":0,\"slip_status\":false,\"min_deposit\":0,\"max_deposit\":0,\"shortcuts\":null,\"default_shortcut\":0,\"payment_type\":{\"id\":\"\",\"payment_type_code\":\"\",\"payment_type_name\":\"\",\"payment_type_image\":\"\",\"default_images_url\":\"\",\"category\":\"\",\"deposit_type\":\"\",\"is_active\":0,\"paym",
+      "ts": "2026-09-18T07:45:15.021420+00:00"
+    },
+    {
+      "label": "BOLA payment_type_id=f9eb6b6d...",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/payment-bank-information?include=true&deposit=true&payment_type_id=f9eb6b6d-37ed-4148-8a12-320b7d3a647c&currency_language_id=aea7d307-bae6-4cc9-806c-b8220cbc996f&language_id=d9701bb6-c972-4898-a96e-81101baf5acf",
+      "status": 200,
+      "snippet": "{\"data\":{\"id\":\"2c595a21-9bba-4d06-ab30-5dc3c97dacb9\",\"payment_type_id\":\"f9eb6b6d-37ed-4148-8a12-320b7d3a647c\",\"bank_information_id\":\"78db40d6-edd9-4a58-84ba-5179780c068f\",\"currency_id\":\"718f60ce-c8a4-4820-8c84-2bd7f84a351c\",\"bank_account_no\":\"236-2-29795-0\",\"payment_name\":\"บจก. เจริญสุข เทรด กรุ๊ป\",\"is_active\":1,\"fee\":0,\"slip_status\":false,\"min_deposit\":0,\"max_deposit\":0,\"shortcuts\":[],\"default_sh",
+      "ts": "2026-09-18T07:45:15.155474+00:00"
+    },
+    {
+      "label": "BOLA payment_type_id=aea7d307...",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/payment-bank-information?include=true&deposit=true&payment_type_id=aea7d307-bae6-4cc9-806c-b8220cbc996f&currency_language_id=aea7d307-bae6-4cc9-806c-b8220cbc996f&language_id=d9701bb6-c972-4898-a96e-81101baf5acf",
+      "status": 200,
+      "snippet": "{\"data\":{\"id\":\"\",\"payment_type_id\":\"\",\"bank_information_id\":\"\",\"currency_id\":\"\",\"bank_account_no\":\"\",\"payment_name\":\"\",\"is_active\":0,\"fee\":0,\"slip_status\":false,\"min_deposit\":0,\"max_deposit\":0,\"shortcuts\":null,\"default_shortcut\":0,\"payment_type\":{\"id\":\"\",\"payment_type_code\":\"\",\"payment_type_name\":\"\",\"payment_type_image\":\"\",\"default_images_url\":\"\",\"category\":\"\",\"deposit_type\":\"\",\"is_active\":0,\"paym",
+      "ts": "2026-09-18T07:45:15.278008+00:00"
+    },
+    {
+      "label": "POST auto-slip mass-assign",
+      "method": "POST",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/auto-slip-deposit/check",
+      "status": 200,
+      "snippet": "\"success\"",
+      "ts": "2026-09-18T07:45:15.387689+00:00"
+    },
+    {
+      "label": "POST auto-slip mass-assign",
+      "method": "POST",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/auto-slip-deposit/check",
+      "status": 400,
+      "snippet": "{\"name\":\"BadRequest\",\"message\":{\"bd\":\"এই স্লিপটি ইতিমধ্যে ব্যবহার করা হয়েছে\",\"cn\":\"Internal Server Error\",\"en\":\"This slip has already been used.\",\"es\":\"Este resbalón ya ha sido utilizado.\",\"id\":\"Slip ini sudah digunakan.\",\"in\":\"Internal Server Error\",\"jp\":\"この伝票はすでに使用されています。\",\"ke\":\"Hierdie strokie is reeds gebruik.\",\"kh\":\"ស្លីបនេះបានប្រើរួចហើយ។\",\"kr\":\"Internal Server Error\",\"la\":\"ໃບນີ້ຖືກໃຊ້ແລ້ວ.\",",
+      "ts": "2026-09-18T07:45:15.511641+00:00"
+    },
+    {
+      "label": "POST auto-slip mass-assign",
+      "method": "POST",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/auto-slip-deposit/check",
+      "status": 400,
+      "snippet": "{\"name\":\"BadRequest\",\"message\":{\"bd\":\"এই স্লিপটি ইতিমধ্যে ব্যবহার করা হয়েছে\",\"cn\":\"Internal Server Error\",\"en\":\"This slip has already been used.\",\"es\":\"Este resbalón ya ha sido utilizado.\",\"id\":\"Slip ini sudah digunakan.\",\"in\":\"Internal Server Error\",\"jp\":\"この伝票はすでに使用されています。\",\"ke\":\"Hierdie strokie is reeds gebruik.\",\"kh\":\"ស្លីបនេះបានប្រើរួចហើយ។\",\"kr\":\"Internal Server Error\",\"la\":\"ໃບນີ້ຖືກໃຊ້ແລ້ວ.\",",
+      "ts": "2026-09-18T07:45:15.661941+00:00"
+    }
+  ]
+}

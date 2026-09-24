@@ -1,0 +1,361 @@
+{
+  "ts": "2026-09-20T06:17:18.768537+00:00",
+  "api_host": "54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com",
+  "token_sub": "266d74e3-d6ca-47eb-b9ac-b8c45574bad4",
+  "probes": 44,
+  "hits": [],
+  "results": [
+    {
+      "label": "GET /mb/users",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/users?_t=1789885021865",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:06.997938+00:00"
+    },
+    {
+      "label": "GET /mb/payment-bank-information",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/payment-bank-information?include=true&deposit=true&payment_type_id=f9eb6b6d-37ed-4148-8a12-320b7d3a647c&currency_language_id=aea7d307-bae6-4cc9-806c-b8220cbc996f&language_id=d9701bb6-c972-4898-a96e-81101baf5acf",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:07.102018+00:00"
+    },
+    {
+      "label": "IDOR alg:none sub=00000000...",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/users?_t=1789885027102",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:07.235385+00:00"
+    },
+    {
+      "label": "IDOR alg:none sub=00000000...",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/users?_t=1789885027235",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:07.349343+00:00"
+    },
+    {
+      "label": "IDOR alg:none sub=11111111...",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/users?_t=1789885027349",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:07.477893+00:00"
+    },
+    {
+      "label": "IDOR alg:none sub=eb037bb8...",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/users?_t=1789885027477",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:07.600400+00:00"
+    },
+    {
+      "label": "JWT alg:none admin=true",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/users",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:07.739581+00:00"
+    },
+    {
+      "label": "POST auto-slip/check (real QR replay)",
+      "method": "POST",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/auto-slip-deposit/check",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:09.226865+00:00"
+    },
+    {
+      "label": "QR forge: amount_5000",
+      "method": "POST",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/auto-slip-deposit/check",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:09.368447+00:00"
+    },
+    {
+      "label": "QR forge: amount_null",
+      "method": "POST",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/auto-slip-deposit/check",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:09.474492+00:00"
+    },
+    {
+      "label": "QR forge: ref_modified",
+      "method": "POST",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/auto-slip-deposit/check",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:09.599893+00:00"
+    },
+    {
+      "label": "QR forge: empty_qr",
+      "method": "POST",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/auto-slip-deposit/check",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:09.731359+00:00"
+    },
+    {
+      "label": "QR forge: sql_qr",
+      "method": "POST",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/auto-slip-deposit/check",
+      "status": 403,
+      "snippet": "<!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 7]>    <html class=\"no-js ie7 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 8]>    <html class=\"no-js ie8 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if gt IE 8]><!--> <html class=\"no-js\" lang=\"en-US\"> <!--<![endif]-->\n<head>\n<title>Attention Required! | Cloudflare</title>\n<meta charset=\"UTF-8\" />\n<meta",
+      "ts": "2026-09-20T06:17:09.818633+00:00"
+    },
+    {
+      "label": "QR forge: json_qr",
+      "method": "POST",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/auto-slip-deposit/check",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:09.982175+00:00"
+    },
+    {
+      "label": "GET /mb/users",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/users",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:10.103204+00:00"
+    },
+    {
+      "label": "GET /mb/balance",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/balance",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:10.226850+00:00"
+    },
+    {
+      "label": "GET /mb/wallet",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/wallet",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:10.364728+00:00"
+    },
+    {
+      "label": "GET /mb/transactions",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/transactions",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:10.488683+00:00"
+    },
+    {
+      "label": "GET /mb/deposit/history",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/deposit/history",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:10.603960+00:00"
+    },
+    {
+      "label": "GET /mb/withdraw/history",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/withdraw/history",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:10.727682+00:00"
+    },
+    {
+      "label": "GET /mb/payment-bank-information",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/payment-bank-information",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:10.851349+00:00"
+    },
+    {
+      "label": "GET /mb/auto-slip-deposit",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/auto-slip-deposit",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:10.977378+00:00"
+    },
+    {
+      "label": "GET /mb/deposit",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/deposit",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:11.112242+00:00"
+    },
+    {
+      "label": "POST /mb/deposit",
+      "method": "POST",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/deposit",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:11.230028+00:00"
+    },
+    {
+      "label": "GET /mb/withdraw",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/withdraw",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:11.356606+00:00"
+    },
+    {
+      "label": "POST /mb/withdraw",
+      "method": "POST",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/withdraw",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:11.493471+00:00"
+    },
+    {
+      "label": "GET /mb/bonus",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/bonus",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:16.627196+00:00"
+    },
+    {
+      "label": "GET /mb/promotion",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/promotion",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:16.744098+00:00"
+    },
+    {
+      "label": "GET /mb/referral",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/referral",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:16.857099+00:00"
+    },
+    {
+      "label": "GET /mb/members",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/members",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:16.981123+00:00"
+    },
+    {
+      "label": "GET /mb/admin",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/admin",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:17.103562+00:00"
+    },
+    {
+      "label": "GET /mb/report",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/report",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:17.229088+00:00"
+    },
+    {
+      "label": "GET /mb/agents",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/agents",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:17.363317+00:00"
+    },
+    {
+      "label": "GET /mb/operators",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/operators",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:17.480307+00:00"
+    },
+    {
+      "label": "GET /api/users",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/api/users",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:17.615723+00:00"
+    },
+    {
+      "label": "GET /api/admin",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/api/admin",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:17.770221+00:00"
+    },
+    {
+      "label": "GET /health",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/health",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:17.880878+00:00"
+    },
+    {
+      "label": "GET /",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:18.005675+00:00"
+    },
+    {
+      "label": "BOLA payment_type_id=00000000...",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/payment-bank-information?include=true&deposit=true&payment_type_id=00000000-0000-0000-0000-000000000001&currency_language_id=aea7d307-bae6-4cc9-806c-b8220cbc996f&language_id=d9701bb6-c972-4898-a96e-81101baf5acf",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:18.122519+00:00"
+    },
+    {
+      "label": "BOLA payment_type_id=f9eb6b6d...",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/payment-bank-information?include=true&deposit=true&payment_type_id=f9eb6b6d-37ed-4148-8a12-320b7d3a647c&currency_language_id=aea7d307-bae6-4cc9-806c-b8220cbc996f&language_id=d9701bb6-c972-4898-a96e-81101baf5acf",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:18.246858+00:00"
+    },
+    {
+      "label": "BOLA payment_type_id=aea7d307...",
+      "method": "GET",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/payment-bank-information?include=true&deposit=true&payment_type_id=aea7d307-bae6-4cc9-806c-b8220cbc996f&currency_language_id=aea7d307-bae6-4cc9-806c-b8220cbc996f&language_id=d9701bb6-c972-4898-a96e-81101baf5acf",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:18.370262+00:00"
+    },
+    {
+      "label": "POST auto-slip mass-assign",
+      "method": "POST",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/auto-slip-deposit/check",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:18.497034+00:00"
+    },
+    {
+      "label": "POST auto-slip mass-assign",
+      "method": "POST",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/auto-slip-deposit/check",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:18.624101+00:00"
+    },
+    {
+      "label": "POST auto-slip mass-assign",
+      "method": "POST",
+      "url": "https://54ef7626cb381f4bab8be91f0cdbce47mgapi.asdgapicenterssdo.com/mb/auto-slip-deposit/check",
+      "status": 401,
+      "snippet": "{\"name\":\"NotAuthenticated\",\"message\":{\"bd\":\"Internal Server Error\",\"cn\":\"Internal Server Error\",\"en\":\"Internal Server Error\",\"es\":\"Internal Server Error\",\"id\":\"Internal Server Error\",\"in\":\"Internal Server Error\",\"jp\":\"Internal Server Error\",\"ke\":\"Internal Server Error\",\"kh\":\"Internal Server Error\",\"kr\":\"Internal Server Error\",\"la\":\"Internal Server Error\",\"mm\":\"Internal Server Error\",\"my\":\"Internal",
+      "ts": "2026-09-20T06:17:18.763507+00:00"
+    }
+  ]
+}
