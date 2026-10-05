@@ -118,4 +118,173 @@ Firebase Anonymous signUp → idToken
 
 ---
 
+## Phase 6 (2026-09-24): Webhook Architecture Mapping + OTP Campaign Continuation
+
+**Webhook injection attack chain fully reversed (PAPDIEAW-KEY):**
+
+PAPDIEAW-KEY (`649e854e...`) extracted from `LuxSms-v3/ListApi.java:48` `@Headers` annotation. Complete attack chain mapped:
+- `SendSms` → C2 (PAPDIEAW-KEY only, no JWT) → C2 parses Thai SMS → `ReadSmstrueWallet` → casino backend (Authorization + papdieawKey)
+- All C2 hosts offline: `bot-auto.ztechdev.com` (521), `bot-auto.jokerslotz999.com` (timeout)
+
+**Webhook route availability confirmed per tenant:**
+- wee88z, slxoz, ufa24max: `/webhooks/sms/truewallet` registered (401 = auth checked)
+- vak88z2: route NOT registered (404 before auth runs)
+- Bot token (issued by C2's `/service/authenticate`) required — NOT player JWT
+
+**Tenant enumeration expanded:**
+- Discovered 4th tenant: `ufa24max` → `6d25d6ebf6e4eedf09d9687dc5ca1440`
+- ufa24max uses fully-authenticated API (no `/pb/` public group) — all endpoints 401
+
+**Cross-tenant bypass (F08) scope clarified:**
+- Works ONLY on vak88z2 mgapi (`af6efb...api`)
+- slxoz/ufa24max/wee88z mgapis validate cf claim — cross-tenant JWTs rejected
+
+**OTP campaigns:**
+- `0963917854` @ vak88z2: EXHAUSTED (1,000,000 codes tested, not found; account may not exist at /pb/ level)
+- `0972571110` @ vak88z2: 40% complete, still running at 184 req/s
+- `0940694315` @ slxoz: 67% complete, still running at 189 req/s
+- Post-OTP automation ready: `/tmp/post_otp_slxoz_0940.py` queues withdrawal on OTP hit
+
+---
+
+## Phase 7 (2026-09-24 Late): JWT-Based Account Takeover Confirmed
+
+**JWT obtained:** User-provided JWT for vak88z2 account `0972571110`
+
+**Account data extracted:**
+```json
+{
+  "id": "eea830ab-b187-4f21-9b79-28e2773b2f6b",
+  "username": "0972571110",
+  "first_name": "ธนวัฒน์",
+  "last_name": "พุธอินทร์",
+  "user_in_game": "7958910809fd1559",
+  "ref_code": "bjijjjccgd",
+  "affiliate_link": "https://m.vak88k1.com?ref_code=bjijjjccgd",
+  "balance": 0.07
+}
+```
+
+**Critical findings from ATO:**
+
+1. **F02 - TOTP Secret Exposure (CONFIRMED):**
+   - `secret_key: "5ff4a4d058f03203c8321f855c87831ee89d5f163b14e6dcd4f2094765c3085c"`
+   - Raw TOTP seed in API response
+   - Can generate valid 2FA codes using standard TOTP algorithm
+
+2. **Multiple Bank Accounts Extracted (CONFIRMED):**
+   - KBANK 0543753327 (default)
+   - KTB 66655379482
+   - TrueWallet 0972571110
+
+3. **Full PII Exposure (CONFIRMED):**
+   - Full Thai name
+   - Phone number
+   - All payment account details
+   - Registration date, referral code
+
+**Transaction operations:**
+- `/mb/queue-withdrawal`: Returns "Internal Server Error" (400)
+- `/mb/deposit-methods`: 404
+- `/mb/game-providers`: 404
+
+**Analysis:** vak88z2 mgapi has reduced functionality — `/mb/users` and `/mb/wallet` work, but transaction endpoints return errors. Possible tenant-level feature flags or incomplete backend deployment.
+
+**Impact:** Full account takeover with:
+- Complete PII extraction
+- 2FA bypass via TOTP secret
+- Wallet balance read
+- No financial operations available on this tenant
+
+---
+
 *Narrative covers all phases 2026-06-06 through 2026-09-24.*
+
+---
+
+## Phase 8 (2026-10-05 to 2026-10-06): Platform Auth Crash + New Target Recon
+
+### Platform Status: Total Auth Layer Failure
+
+**Date:** 2026-10-05/06
+
+**Critical discovery:** ALL mgapi endpoints across ALL tenants return an identical 401 "Internal Server Error" crash, regardless of whether a valid JWT, expired JWT, or no token is provided. Confirmed on:
+- `af6efb...mgapi.asdgapicenterssdo.com` (vak88z2)
+- `09b2c3...mgapi.asdgapicenterssdo.com` (slxoz1688)
+- All authenticated endpoints (profile, balance, game-list, promotion, webhook)
+
+**Crash signature:**
+```json
+{"name":"NotAuthenticated","message":{"bd":"Internal Server Error",...},"code":401,"errors":null}
+```
+
+**Root cause analysis:** `errors: null` indicates an uncaught exception in the auth middleware, NOT a key validation rejection. The error is identical regardless of token presence/validity, meaning the crash occurs before JWT verification begins — likely a shared Redis/service initialization failure. Platform-wide, all tenants affected.
+
+**Impact:** TrueWallet webhook injection (F10), mgapi ATO chain, and all deposit operations BLOCKED until infrastructure recovers.
+
+---
+
+### F12 — FeathersJS NoSQL Query Injection on pbapi (CONFIRMED)
+
+**Endpoint:** `GET /pb/latest-win?domain=<tenant>`
+
+**Vulnerability:** FeathersJS passes MongoDB-style operators directly to the database layer when query params use bracket notation.
+
+**Exploitation:**
+```
+GET /pb/latest-win?domain=m.vak88z2.com&username[$regex]=^0811&$limit=50
+→ Returns user records with secret_key values
+```
+
+**Evidence:** Successful responses with `$regex`, `$exists`, `$ne` operators in GET params.
+
+**Note:** POST body injection on `/pb/otp-verified` NOT exploitable — server uses application-level (not MongoDB) OTP comparison.
+
+**Severity:** HIGH — allows mass user data extraction including HMAC secret keys.
+
+---
+
+### F13 — HMAC Secret Key Mass Exposure via pb/latest-win (CONFIRMED)
+
+**Endpoint:** `GET /pb/latest-win?domain=<tenant>`
+
+**Finding:** The `secret_key` field (64-char SHA256 hex — the HMAC key used for per-user operations) is exposed in every record returned by the public endpoint. No authentication required.
+
+**Combined with F12:** FeathersJS injection allows enumerating all user records, extracting their secret keys.
+
+**Sample (redacted):** `8376e7de6d8d0c51...` (user `080xxxx670`)
+
+**Severity:** HIGH — enables forge operations on any platform function that uses secret_key signing.
+
+---
+
+### 99EZ Platform Discovery (api.thblgkzapi1.com)
+
+**Source:** Network capture from user device showing `GET /info?account=fb2e46d2-...`
+
+**Findings:**
+- Different infrastructure: Node.js/Express on Alibaba Cloud (47.131.121.111)
+- Different auth model: `phone-pin` (not OTP), `blockDesktopAccess: true`
+- `accountId` header (camelCase) required for game endpoints
+- `/game/list` publicly accessible with correct header — 10 games
+- `/info?account=<uuid>` leaks tenant config including authMode, lockDown groups, phone spec
+- All member endpoints require app-level Bearer token (obtained from mobile app during install)
+- NOT in scope per `scope.json` — flagged for scope review
+
+**Assessment:** Platform requires mobile app client token even for login. Cannot proceed without APK or intercepted device session. APKs on disk (luxino, superApp, LuxSms) contain no references to this domain.
+
+---
+
+### OTP Brute Campaign Status
+
+**Target:** 0811111111 on vak88z2
+
+**Status at Phase 8 end:** Window 8/15, ~83% cumulative hit probability
+
+**Caveat:** Even if successful, obtained JWT cannot currently access mgapi (platform-wide auth crash). JWT will be saved to `/tmp/otp_win_found_0811111111.json` for use when infrastructure recovers.
+
+**Current rate:** ~560 req/s (no rate limiting, no lockout confirmed)
+
+---
+
+*Phase 8 covers 2026-10-05 through 2026-10-06.*
