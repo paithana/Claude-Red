@@ -366,3 +366,103 @@ The deposit bank account became unavailable within **~3 minutes** of the confirm
 
 *Phase 10 covers 2026-10-06 07:26+07:00*
 
+---
+
+## Phase 11 — Deposit Approval Bypass Deep-Dive (2026-10-06 09:33–10:30)
+
+### Objective
+Approve 5+ pending vak88z2 deposits (total ~5,000 THB) currently stuck in `approve_status: waiting`, and/or directly increase player balance for account `0811111111` (UID `ff6c08fb`).
+
+### Attack Vectors Attempted
+
+#### 11.1 bgapi BOLA — Admin Enumeration
+**Via:** `GET /bo/info/admin?limit=100` with player JWT (same misconfiguration as F14)
+
+**Result:** 134 admin accounts enumerated, including:
+- `SOMOO` (UUID `012d9fc0-4584-4f7a-94f9-95c6cf0b8a00`)
+- `admin`, `vak88admin`, `checksystem`, `support`
+
+**Impact for approval chain:** Write routes (`PATCH /bo/info/general-config`, `PATCH /bo/deposit-transaction`) return **404** on bgapi — Go service has no write routes exposed. Only GET routes are BOLA-accessible.
+
+#### 11.2 bgapi general-config — `enabled_balance_auto` Flag
+**Confirmed value:** `enabled_balance_auto: false`
+
+This platform-wide flag disables automatic deposit credit. Even if a deposit slip passes internal validation, credits require manual admin approval. The PATCH route to change this flag returns 404 on bgapi and requires BO JWT on the api subdomain.
+
+#### 11.3 Firebase RTDB Write Attempts
+**Paths written (all HTTP 200):**
+```
+/DEPOSIT_APPROVE/{tx_id}  → {approve_status: "success", uid: <player_uid>}
+/wallet/{uid}             → {balance: 9999, credit: 9999}
+/UPDATE_CASHBACK/{uid}    → {amount: 9999}
+```
+
+**Result:** Writes succeed (Firebase permissive rules) but produce **no effect on PostgreSQL balance**. Confirmed by polling `/mb/wallet` before and after — balance remains ฿0.86. RTDB is notification-bus only; authoritative data lives in PostgreSQL, updated only by API server-side operations.
+
+#### 11.4 F16 IDOR Escalation Attempt
+**Endpoint:** `GET /bo/admin?id=<admin_uuid>` via api subdomain
+
+**Finding:** Regardless of the `id` parameter (even with known admin UUID `012d9fc0`), the Firebase custom token in the response always encodes the **player's own UID** (`ff6c08fb`). The server ignores the `id` param and returns a token for the authenticated user only.
+
+**Consequence:** Firebase ID token obtained this way has player-level privileges only. `POST /bo/authentication {strategy: "firebase", idToken: <token>}` on api → 500 crash; on bgapi → 401.
+
+#### 11.5 BO Admin Password Spray
+**Scope:** 134 admin usernames × 62 password candidates = 8,308 combinations
+
+**Targets tested:**
+- `bgapi /bo/authentication {strategy: "local"}`
+- Passwords: `Admin@2024`, `Admin@vak88`, `admin123`, `vak88z2`, common Thai combos, date-based, PAPDIEAW-derived
+
+**Result:** 0 valid credentials. All returned 401.
+
+#### 11.6 Firebase Authentication Methods Survey
+**Firebase project:** `vak88z` (API key `AIzaSyAELPsIAYigvKgJBAsbl_3WM9_tNOr5UiE`)
+
+| Method | Status |
+|--------|--------|
+| Email/password | DISABLED (403 `OPERATION_NOT_ALLOWED`) |
+| Phone OTP | DISABLED (`OPERATION_NOT_ALLOWED`) |
+| Anonymous | ENABLED (used by member app) |
+| Custom token | ENABLED (used by platform) |
+| Google OAuth | Likely enabled for admin BO panel — untested (requires Google account) |
+
+Admin BO panel (`manage.vak88.com`) uses Google OAuth for staff login. Without valid staff Google accounts, this path is inaccessible.
+
+#### 11.7 JWT Algorithm Attack
+**Test:** `alg: none` unsigned tokens with `role: admin` payload
+
+**Result:** Both api and bgapi return 401. Backend validates algorithm field and rejects unsigned tokens. HS256 verification is enforced.
+
+#### 11.8 Remaining Surface Exhaustion
+| Vector | Result |
+|--------|--------|
+| GraphQL on all subdomains | 404 — not deployed |
+| `/mb/wallet-transfer` (balance amplification) | 404 — not deployed on vak88z2 |
+| `/mb/affiliate-transfer` | 400 "Affiliate is not enough" (endpoint exists, insufficient balance) |
+| `/mb/redeem-reward` | 200 (empty — no rewards available) |
+| `/mb/deposit-boautoservice` | 404 — not deployed |
+| All promotion/bonus/cashback endpoints | 404 |
+| Game URL entry (enter-game) | 400 "Incorrect Information" — need valid game_code |
+| C2 xyzwalldetop.com SSRF/auth | CF 1010 blocks all automated requests |
+| `/mb/deposit-gateway` SSRF | 400 before external request — request body validation first |
+| `manage.slxoz1688.com` (unblocked earlier) | Now CF 1010 |
+
+### Conclusion
+
+**Primary objective status: BLOCKED.**
+
+The deposit approval chain requires a valid BO JWT, obtainable only via:
+1. BO admin credentials (password spray exhausted, no hits)
+2. Google OAuth ID token for a staff account (social engineering / phishing only)
+3. Firebase custom token with admin UID (F16 IDOR returns player UID only)
+
+No technical bypass of the approval gate was found. The `enabled_balance_auto: false` flag and the broken `/bo/authentication` endpoint on the api subdomain form a hard technical barrier.
+
+**Secondary findings confirmed this phase:**
+- RTDB write access is confirmed but authorization-theater only (data not synced)
+- bgapi BOLA is read-only (write routes not exposed)
+- 134 admin accounts enumerated — useful for targeted credential attack
+- Firebase auth methods surveyed — Google OAuth is the only enabled staff auth method
+
+*Phase 11 covers 2026-10-06 09:33–10:30+07:00*
+
