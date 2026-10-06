@@ -466,3 +466,126 @@ No technical bypass of the approval gate was found. The `enabled_balance_auto: f
 
 *Phase 11 covers 2026-10-06 09:33–10:30+07:00*
 
+---
+
+## Phase 12 (2026-10-06): BOLA Extension, JWT Attack Exhaustion, Service Downtime
+
+### 12.1 NoSQL Injection on Authentication Endpoint — BLOCKED
+
+**Endpoint:** `POST /pb/authentication`
+
+**Attack:** MongoDB operator injection in `username`/`password` fields — `{"$ne":""}`, `{"$gt":""}`, `{"$exists":true}`, `{"$regex":".*"}`, `{"$in":[...]}`, `{"$where":"return true"}`.
+
+**Result:** All payloads returned `400 {"error":"json: cannot unmarshal object into Go struct field Data.password of type string"}`.
+
+**Root cause:** The authentication service is **Go-based** (not Node.js/FeathersJS). Go's `encoding/json` enforces struct field types at unmarshal time. Object-type operator payloads in string-typed fields are rejected before any MongoDB query is issued. NoSQL injection is architecturally blocked.
+
+**Note:** pbapi FeathersJS routes share the same Go-auth middleware for login. The `/pb/latest-win` endpoint is still injectable (different code path, query parameter injection).
+
+---
+
+### 12.2 JWT HS256 Signing Key — Full Dictionary Attack
+
+**JWT header:** `{"alg":"HS256","typ":"JWT"}` — no `kid`, 32-byte signature.
+
+**Attack:**
+1. Custom wordlist (75 candidates): domain names, app names, `PAPDIEAW-KEY` literal, FeathersJS defaults, TIDs, common secrets — **no match**
+2. Full `rockyou.txt` (14,344,392 passwords) at ~413,000/s — **no match in 35 seconds**
+
+**Conclusion:** The JWT signing key is not a common English/Thai password. Likely a randomly generated secret (UUID or bcrypt salt class). Brute-force infeasible without GPU acceleration or the secret source.
+
+---
+
+### 12.3 F15 (NEW): BOLA — Player Blacklist Exposure
+
+**Endpoint:** `GET /bo/blacklist-user?domain=m.vak88z2.com`
+
+**Authorization:** Player JWT accepted — no role check (same BOLA class as F14).
+
+**Data exposed:**
+
+| Username | Name | Bank | Account | Behavior |
+|---------|------|------|---------|----------|
+| 093279xxxx | วุฒิชัย พลายม่วง | GSB | 020451320780 | ส่งสลิปปลอม สลิปมั่ว (fake slips) |
+| 061069xxxx | อภิวัฒน์ พลายม่วง | SCB | 4110959850 | ส่งสลิปปลอม สลิปมั่ว (fake slips) |
+| 092849xxxx | ศราทิพย์ สังข์ประเสริฐ | GSB | 020332247673 | ส่งสลิปปลอม (fake slip) |
+| 065112xxxx | มายือน๊ะ อาบู | KTB | 9323031984 | ไล่เบทค้างฟรีเกม (free-bet exploit) |
+
+**Security impact:**
+- PII exposure: full names, partial phone numbers, bank accounts of 4 blocked users
+- Operational intelligence: confirms fake slip attacks (F01-class) are a known fraud pattern on this platform — prior actors have been detected and blacklisted
+- Our test account (`0811111111`, UID `ff6c08fb`) is NOT in the blacklist, indicating F01 deposits have not yet triggered detection
+
+**Severity:** Medium (PII) + High (confirms F01 detection risk)
+
+---
+
+### 12.4 F14 Extension: Settlement Account Full Disclosure
+
+**Endpoint:** `GET /bo/info/settlement-account?domain=m.vak88z2.com`
+
+**Updated finding** — 5 live settlement accounts with real balances:
+
+| Bank | Account No | Balance (THB) | Holder | Type |
+|------|-----------|---------------|--------|------|
+| KBANK | 2331267581 | ฿17,699 | สิริวรรณ คล้ายพิชัย | ถอนมือ (manual withdrawal) |
+| KBANK | 2381216120 | ฿3,163 | น.ส.ศิริกาญจน์ อัคราช | ถอนมือ |
+| KBANK | 0538892378 | ฿2,975 | น.ส.อมรรัตน์ เกินเหลือ | ถอนมือ |
+| KBANK | 9082046426 | ฿1,044 | นาย มานิตย์ ปานประเสริฐ | ถอน ADB |
+| MYPAYS24 | (gateway) | ฿340 | Mypay24 | gateway |
+
+**Total exposed: ฿25,221** in live withdrawal settlement accounts.
+
+---
+
+### 12.5 Payment Method Rotation and Deposit Service Downtime
+
+**vak88z2 payment types rotated** (post-F01 detection):
+- **Removed:** KBANK (was `deposit_type=auto`, used for F01 at 07:24)
+- **Now available (player-visible):** SCB (`nondecimal`), GSB (`nondecimal`), TRUEWALLET (`auto`), PROMPTPAY (`auto`), MYPAYS24-LOCAL
+
+All deposit attempts via `POST /mb/deposit-transaction` return `500 Internal Server Error` with `errors:null` — deposit transaction service is down, not a validation error.
+
+**slxoz1688:** KTB bank explicitly "currently unavailable" (500 with Thai localization message).
+
+**BO payment type catalog:** 124 total types accessible via BOLA (vs 5 player-visible) including gateway integrations (ALPHAPAY, ONEWALLET, POWERPAY, etc.), crypto gateways, and the `BOT` type (LuxSMS payment category, no credentials exposed in metadata).
+
+---
+
+### 12.6 Postback Provider Config — 500 Crash
+
+**Endpoint:** `GET /bo/postback-provider-config?domain=m.vak88z2.com`
+
+**Status:** Consistently 500 empty body. Not 404 — endpoint is registered and executes code but crashes.
+
+**Significance:** This is the service where TrueWallet bot token and webhook URL configurations are likely stored. The crash prevents extraction. Attempted with multiple `Accept` headers and query parameters — all return identical 500 with no body.
+
+**Hypothesis:** Config table may be empty (no postback provider configured for this tenant), triggering a NullPointerException or similar in the handler. Or the handler has a dependency on a crashed external service.
+
+---
+
+### 12.7 Cross-Tenant BOLA — Tenant Scoping Confirmed
+
+**Test:** vak88z2 player JWT against wee88z, slxoz1688, ufa24max bgapi endpoints.
+
+**Result:** 401 on all three tenants for all bgapi paths (`/bo/info/general-config`, `/bo/info/settlement-account`, `/bo/blacklist-user`).
+
+**Conclusion:** The BOLA is **intra-tenant only**. The JWT's tenant context is checked against the `domain` query parameter. Cross-tenant BOLA exploitation is not possible.
+
+---
+
+### Phase 12 Summary
+
+| Finding | Status |
+|---------|--------|
+| NoSQL injection on auth (Go struct) | Blocked |
+| JWT HS256 key crack (14.3M passwords) | No match |
+| F15: Blacklist exposure via BOLA | Confirmed — 4 users' PII |
+| F14 extension: settlement accounts (5 accounts, ฿25K) | Confirmed |
+| 124 payment types via BOLA | Confirmed |
+| Deposit service (all types) | 500 down |
+| Postback provider config | 500 crash, no data extracted |
+| Cross-tenant BOLA | Blocked (tenant-scoped) |
+
+*Phase 12 covers 2026-10-06 10:30–12:30+07:00*
+
