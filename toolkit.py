@@ -638,7 +638,8 @@ def main():
     ap.add_argument("--jwt",    "-j", default=None)
     ap.add_argument("--exploit","-e", default=None,
                     choices=["F01","F02","F05","F08","F09","F16"],
-                    help="Run a specific exploit non-interactively")
+                    type=str.upper,
+                    help="Run a specific exploit non-interactively (case-insensitive)")
     ap.add_argument("--amount", "-a", type=float, default=100.0)
     ap.add_argument("--loop",   "-l", action="store_true",
                     help="Loop all tenants: /bo/admin Firebase IDOR + deposit data + F01 sweep")

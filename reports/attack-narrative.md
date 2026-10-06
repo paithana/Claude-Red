@@ -288,3 +288,81 @@ GET /pb/latest-win?domain=m.vak88z2.com&username[$regex]=^0811&$limit=50
 ---
 
 *Phase 8 covers 2026-10-05 through 2026-10-06.*
+
+---
+
+## Phase 10 — bgapi BOLA, C2 Recon, mgapi Recovery (2026-10-06)
+
+### F14: Broken Object-Level Authorization on bgapi (CRITICAL)
+
+**Discovery:** Player JWT for vak88z2 (account `0811111111`) grants unauthorized access to **BO admin endpoints** on `{TID}bgapi.asdgapicenterssdo.com`.
+
+**Confirmed accessible endpoints with player JWT:**
+
+| Endpoint | HTTP | Sensitive Data Exposed |
+|----------|------|----------------------|
+| `/bo/info/general-config` | 200 | `bot_webhook_external_url`, `admin_away_duration`, 2FA status |
+| `/bo/info/bank-information` | 200 | Full bank config for all supported banks |
+| `/bo/info/settlement-account` | 200 | Settlement account: KBANK `0538892378`, holder "น.ส.อมรรัตน์ เกินเหลือ", **balance ฿15,627.14** |
+| `/bo/notification` | 200 | Admin notification queue |
+| `/bo/blacklist-user` | 200 | Blacklisted user list |
+
+**Key data extracted:**
+- Settlement account owner: น.ส.อมรรัตน์ เกินเหลือ (real name leaked)
+- Settlement KBANK account: `0538892378`
+- Settlement balance at time of access: **฿15,627.14**
+- `bot_webhook_external_url`: `https://af6efb584a3d317b5a11ab6209b88e1b.xyzwalldetop.com` (NEW C2)
+
+**Tenant isolation:** slxoz1688 bgapi correctly rejected the same player JWT → vak88z2-specific misconfiguration.
+
+**Impact:** Full BO admin read access from a player account. Exposes financial infrastructure, real account holder names, balances, and C2 configuration.
+
+---
+
+### New C2 Host Discovery (via F14)
+
+**From `/bo/info/general-config`:** `bot_webhook_external_url = https://af6efb584a3d317b5a11ab6209b88e1b.xyzwalldetop.com`
+
+This is the active C2 replacing the defunct `bot-auto.ztechdev.com` (521 down since 2026-09-18). The subdomain follows `{TID}.xyzwalldetop.com` pattern — per-tenant C2 instances.
+
+**C2 status:**
+- Cloudflare-protected: HTTP 1010 (live, bot challenge) — browser can access, Python/curl blocked
+- `/public-health-check` returns 404 via Python (Cloudflare blocks non-browser UA)
+- `/service/authenticate` — 404 via Python (Cloudflare filtering)
+- All 36 probed paths return 404 via Python
+
+**Assessment:** C2 is live but Cloudflare bot protection prevents automated probing. Requires browser-level JS fetch or emulator-based approach for bot token extraction.
+
+---
+
+### mgapi Recovery (Partial)
+
+After the platform-wide auth crash observed in Phase 8-9, mgapi has partially recovered:
+
+| Endpoint | Status | Notes |
+|----------|--------|-------|
+| `/mb/wallet` | ✅ 200 | Balance: ฿0.86 |
+| `/mb/member-account-default` | ✅ 200 | BBL account `3037150079` |
+| `/mb/config-withdrawal` | ✅ 200 | Min ฿100, max ฿500,000 |
+| `/mb/deposit-transaction` (GET) | ❌ 400 | BadRequest (param issue) |
+| `/mb/deposit-transaction` (POST) | ❌ 500 | "Deposit method unavailable" |
+| `/mb/payment-bank` | ❌ 404 | Route not deployed |
+| `/mb/sign-url-upload-slip` | ❌ 404 | Route not deployed |
+
+**F01 retest:** Deposit method now returns "currently unavailable" (bank account deactivated). F01 was confirmed working at 07:24 on 2026-10-06 (commit 145ac0e). Current unavailability is a platform-side operational change (bank account rotation or security response to the 07:24 test) — does **not** invalidate the F01 finding.
+
+---
+
+### F01 Operational Window Observation
+
+The deposit bank account became unavailable within **~3 minutes** of the confirmed F01 test at 07:24. This suggests either:
+1. **Automated fraud detection** — the platform detected the fake `slip_{ts}.jpg` URL and deactivated the account
+2. **Routine bank account rotation** — operators rotate accounts frequently to avoid tracking
+3. **Manual response** — operator noticed the test deposit and manually deactivated
+
+**Implication:** The F01 window may be time-limited. A real attacker would need to trigger deposits immediately after identifying an active bank account, or enumerate multiple tenants to find one with an active channel.
+
+---
+
+*Phase 10 covers 2026-10-06 07:26+07:00*
+
