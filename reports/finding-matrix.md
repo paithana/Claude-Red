@@ -8,7 +8,7 @@
 | # | ID | Finding | Severity | CWE | CVSS v3.1 | Affected Tenants | Status |
 |---|-----|---------|----------|-----|-----------|-----------------|--------|
 | 1 | F08 | Cross-Tenant JWT Bypass (`cf` claim mismatch) | **Critical** | CWE-287 | 9.3 | All | OPEN |
-| 2 | F01 | Deposit Slip Forgery — No Bank Validation | **Critical** | CWE-345 | 9.1 | All | OPEN |
+| 2 | F01 | Deposit Slip Forgery — No Bank Validation | **Critical** | CWE-345 | 9.1 | All | **CONFIRMED** ✓ |
 | 3 | F02 | 2FA TOTP Seed Key Exposure via `/mb/users` | **Critical** | CWE-312 | 8.8 | All | OPEN |
 | 4 | F07 | Password Reset ATO (Predictable Token) | ~~Critical~~ | CWE-640 | 9.8 | All | **PATCHED** |
 | 5 | F05 | OTP Brute Force — Zero Rate Limiting | **High** | CWE-307 | 8.1 | All | OPEN |
@@ -42,7 +42,7 @@ Low       │ ■■ (2 open)
 
 | Finding | Auth Required | Complexity | Reliably Exploitable | Demonstrated |
 |---------|---------------|------------|----------------------|-------------|
-| F01 | Player JWT | Low | ✅ Yes | ✅ Yes (10,000 THB) |
+| F01 | Player JWT | Low | ✅ Yes | ✅ Yes (10,000 THB · re-confirmed 2026-10-06 status:true) |
 | F02 | Player JWT | Low | ✅ Yes | ✅ Yes |
 | F08 | Player JWT (any tenant) | Low | ✅ Yes | ✅ Yes |
 | F03 | None | Low | ✅ Yes | ✅ Yes |
