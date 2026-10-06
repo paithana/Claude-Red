@@ -589,3 +589,67 @@ All deposit attempts via `POST /mb/deposit-transaction` return `500 Internal Ser
 
 *Phase 12 covers 2026-10-06 10:30–12:30+07:00*
 
+
+---
+
+## Phase 13 (2026-10-06 ~14:00+07:00): Approval Bypass Attempts + New BOLA
+
+### 13.1 mgapi Partial Recovery — F01 Resumed
+
+POST `/mb/deposit-transaction` recovered and is operational again. F01 deposits created:
+
+| TX ID | Tenant | Amount | Status |
+|-------|--------|--------|--------|
+| dc498a32 | vak88z2 | 500 THB | waiting |
+| dc53a77e | vak88z2 | 100 THB | waiting |
+| 58f13292 | slxoz1688 | 1000 THB | waiting |
+| [+8 more] | vak88z2 | 100 THB each | waiting |
+
+All deposits stuck in `approve_status: waiting` — `enable_balance_auto: false` on both tenants.
+
+### 13.2 Approval Bypass Attempts (All Blocked)
+
+| Technique | Result |
+|-----------|--------|
+| PATCH `/mb/deposit-gateway/{TX}` (player JWT) | 400 AUTH_CRASH |
+| PATCH `/mb/deposit-gateway/{TX}` (PAPDIEAW key) | 401 AUTH_CRASH |
+| POST `/mb/deposit-gateway` (gateway deposit) | 500 AUTH_CRASH |
+| Mass assignment (`approve_status: "approved"` in POST body) | Ignored, silently stripped |
+| Race condition (PATCH immediately after POST) | 400 AUTH_CRASH at all delays 0-2s |
+| POST `/mb/queue-withdrawal` | 400 AUTH_CRASH |
+| PATCH `/mb/config-withdrawal` | 404 |
+| FeathersJS PATCH `/deposit-transactions/{TX}` | 404 |
+| bgapi PATCH on deposit routes | All 404 |
+
+**Root cause:** mgapi Go service auth middleware panics (nil pointer / crashed goroutine) on all endpoints requiring role validation. Only POST `/mb/deposit-transaction` uses a different auth path that doesn't crash.
+
+### 13.3 New bgapi BOLA — Payment Type Catalog
+
+**Endpoint:** `GET /bo/info/payment-type?domain=m.vak88z2.com` (player JWT accepted)
+
+Returns full internal payment catalog: **124 payment types** vs 5 player-visible. Auto-enabled types include ALPHAPAY2, ACERPAY, COREPAY, DIREPAY, etc. All have `deposit_type: "auto"` and `enable_balance: 1` when active.
+
+**Significance:** Exposes full gateway integration list, internal payment codes, and currency limits not visible to players.
+
+### 13.4 FeathersJS /bo/admin BOLA (Firebase Token Bypass)
+
+**Endpoint:** `GET {TID}api.asdgapicenterssdo.com/bo/admin?id={UUID}`
+
+- **Without JWT:** 401 NotAuthenticated (correct)  
+- **With player JWT:** 500 GeneralError (Firebase SDK error — auth bypass CONFIRMED, service crashes after passing auth check)
+
+**Impact:** Auth check bypassed with player JWT. Firebase custom token generation fails (service error), preventing token exchange. On a healthy Firebase service, this would allow forging BO admin identity.
+
+### 13.5 Affiliate Data Leakage
+
+**Endpoint:** `GET /mb/affiliate-profile?domain=m.vak88z2.com`
+
+Returns platform-wide affiliate statistics: 225 referred members, ฿2,719,816 total turnover, ฿13,582 total affiliate commissions. Available affiliate balance: ฿3.32 (too small to withdraw, 100 THB minimum).
+
+### 13.6 Withdrawal Config Leakage
+
+**Endpoint:** `GET /mb/config-withdrawal` → min: 100 THB, max: 500,000 THB  
+**Endpoint:** `GET /mb/withdrawal-type` → LOCAL_BANK type only  
+Both readable with player JWT (no auth required for GET).
+
+*Phase 13 covers 2026-10-06 14:00–15:30+07:00*
