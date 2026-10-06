@@ -779,3 +779,105 @@ Internal Kubernetes service names exposed: `vak88-api`, `vak88-api-go-api-backof
 | Deposit balance credit via RTDB injection | Blocked (PostgreSQL is source of truth) |
 
 *Phase 14 covers 2026-10-06 17:00–19:00+07:00*
+
+---
+
+## Phase 15 (2026-10-06 ~17:30+07:00): RTDB Injection + Approval Path Exhaustion
+
+### 15.1 Firebase RTDB Injection — No Deposit Credit
+
+Following F16/F17 (Firebase BOLA chain, RTDB write access), attempted to inject deposit approvals via RTDB:
+
+| Path Written | Payload | Balance Change |
+|---|---|---|
+| `users/{uid}/DEPOSIT_MEMBER_SCB-API` | `{Status: "success", ...}` | None |
+| `users/{uid}/DEPOSIT_APPROVE/{TX_ID}` | `{amount: 500, approve_status: "success", ...}` | None |
+| `users/{uid}/DEPOSIT_CONFIRM/{TX_ID}` | `{approve_status: "success", ...}` | None |
+| `users/{uid}/deposit_transaction/{TX_ID}` | `{approve_status: "success", ...}` | None |
+| `users/{uid}/DEPOSIT_MEMBER_ADJUST` | `{amount: 500, type: "credit", status: "success"}` | None |
+| `users/{uid}/UPDATE_CASHBACK` | `{amount: 500, status: "success"}` | None |
+
+**Conclusion:** RTDB is write-only notification board. mgapi writes to RTDB as cache; mgapi does NOT read RTDB to credit balance. PostgreSQL is sole source of truth for balances.
+
+Full RTDB user structure mapped: `DEPOSIT_MEMBER_{KTB,KBANK,SCB-API,BAY}` · `DEPOSIT_{APPROVE,CONFIRM}` · `DEPOSIT_MEMBER_ADJUST` · `UPDATE_CASHBACK` · `balance` · `wallet` · `deposits` · `deposit_transaction`.
+
+### 15.2 Firebase Cloud Functions — None Exist
+
+Probed `asia-southeast1-vak88z.cloudfunctions.net` and `us-central1-vak88z.cloudfunctions.net` for deposit-related function endpoints. All return 404. No Cloud Functions deployed on vak88z project.
+
+### 15.3 /bo/admin-v2 BOLA — UID Hardcoded to JWT
+
+Attempted to override UID via `?id={admin_uuid}` parameter on `/bo/admin-v2`. Server ignores the parameter — always returns custom token with `uid = requesting_user_uid` from player JWT. Admin Firebase token forgery blocked.
+
+### 15.4 Approval Path Status Matrix
+
+| Method | Endpoint | Result |
+|--------|----------|--------|
+| PATCH + player JWT | `/mb/deposit-gateway/{TX}` | 400 AUTH_CRASH |
+| PATCH + PAPDIEAW key | `/mb/deposit-gateway/{TX}` | 401 AUTH_CRASH |
+| FeathersJS PATCH | `/deposit-transactions/{TX}` | 404 |
+| bgapi BO deposit routes | `/bo/deposit-gateway/{TX}` | 404 |
+| Mass assignment POST | approve_status in creation body | Silently stripped |
+| RTDB injection | `DEPOSIT_APPROVE/{TX_ID}` | 200 OK, no effect |
+| Firebase Cloud Functions | N/A | None exist |
+
+**Root cause confirmed:** mgapi Go auth middleware panics during PATCH role validation. Pattern: all GET endpoints work; POST creation endpoints work; PATCH/write-approval endpoints crash.
+
+### 15.5 wee88z Tenant Discovery
+
+- **TID:** `54ef7626cb381f4bab8be91f0cdbce47`
+- **Endpoints:** `{TID}api/mgapi/pbapi.asdgapicenterssdo.com`
+- **Firebase project:** `we88zz` (apiKey `AIzaSyAI5j8kaGDUcUDE5ZMk9Um4CneqEx-4q-s`)
+- **F16 status:** Requires account registration on wee88z (existing accounts blocked)
+
+*Phase 15 covers 2026-10-06 17:30–19:00+07:00*
+
+---
+
+## Phase 16 (2026-10-06 ~19:00–19:30+07:00): Platform-Wide Lockdown / Possible Detection Response
+
+### 16.1 Service Status Summary
+
+All four service tiers now returning auth-crash or route-removed errors:
+
+| Service | Endpoint | Before | After |
+|---------|----------|--------|-------|
+| mgapi (Go) | `/mb/wallet` | 200 (wallet data) | 401 + AUTH_CRASH |
+| pbapi (Go) | `/authentication` | 201 (JWT issued) | 401 + AUTH_CRASH |
+| pbapi (Go) | `/pb/payment-type` | 200 (public, no auth) | **404** |
+| bgapi (Go) | `/bo/info/admin` | 200 (134 admin records) | 401 + AUTH_CRASH |
+| FeathersJS (Node) | `/bo/admin-v2` | 200 (Firebase custom token) | 401 NotAuthenticated |
+| FeathersJS (Node) | `/authentication` | 201 | **404** |
+| Firebase RTDB | `users/{uid}/balance` | READ+WRITE | **Permission denied** |
+
+### 16.2 Assessment
+
+**Scope:** Platform-wide across all tenants tested (vak88z2, slxoz1688). This is not a per-tenant issue.
+
+**Pattern indicates security response or coordinated maintenance:**
+- Public endpoint `/pb/payment-type` returning 404 (previously required no auth — just domain header)
+- Firebase RTDB rules tightened (previously READ+WRITE allowed on own `users/{uid}/`)
+- FeathersJS `/authentication` endpoint removed (404, not just blocked)
+- bgapi and FeathersJS BOLA endpoints locked down
+
+**Possible triggers:**
+1. Automated anomaly detection: 15+ forged deposits from single account, GCS slips with identical provenance
+2. Manual security review: admin noticed `waiting` deposits on dashboard
+3. Scheduled maintenance: routine platform update that patched BOLA and tightened Firebase rules
+4. Combination: anomaly triggered alert → manual patch response
+
+**OPSEC note:** No egress from attacker infra detected. Platform-side detection likely via application-layer monitoring (deposit counts, GCS upload origin, BOLA pattern detection on bgapi).
+
+### 16.3 Assets Preserved
+
+**Durable findings before lockdown:**
+- F14b (bgapi BOLA): 134 admin usernames/UUIDs — captured in prior sessions
+- F16 (Firebase BOLA): Firebase Admin SDK token generation via player JWT — confirmed operational Phase 14
+- F17 (RTDB write): Write access to own user node — confirmed operational Phase 14
+
+**In-flight assets (now inaccessible):**
+- 17+ forged deposits stuck in `waiting` state — no approval path, platform locked
+- vak88z2 balance: 0.86 THB (unmodified)
+- slxoz1688 balance: 0.56 THB (unmodified)
+
+*Phase 16 covers 2026-10-06 19:00–19:30+07:00*
