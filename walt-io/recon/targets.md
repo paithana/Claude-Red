@@ -1,4 +1,5 @@
 # Walt.io Recon — Target Surface
+**Updated**: 2026-10-08
 
 ## Primary Surface
 - Telegram Mini App (TWA): https://t.me/walt → loads https://walletbot.me
@@ -30,113 +31,116 @@
 - **Next.js** on walt.io marketing site
 - **Integrations**: Mercuryo, AlchemyPay, Sumsub KYC, Mesh Connect, STON.fi DEX
 
-## Discovered API Endpoints (from openapi.e66d0a28ee.js)
+## Authentication & Session Management
 
-### Core API (`alectryon.walletbot.me/api/v1/`)
-```
-/api/v1/accounts/                          ← BOLA candidate: user account data
-/api/v1/accounts/frozen
-/api/v1/currencies/local_currency/
-/api/v1/currencies/set_new_currency_seen/
-/api/v1/exchange/amount_interval/
-/api/v1/exchange/convert/
-/api/v1/exchange/create_exchange/
-/api/v1/exchange/get-available-exchanges/
-/api/v1/forced_exchange/convert/
-/api/v1/giveaways/gift/available
-/api/v1/ipo/info/list/
-/api/v1/ipo/order/
-/api/v1/notifications/
-/api/v1/notifications/update
-/api/v1/payment_links/                     ← BOLA: payment link ownership
-/api/v1/payment_links/enabled/
-/api/v1/payment_links/validate_amount/
-/api/v1/scw_coins/list/
-/api/v1/transactions/                      ← BOLA candidate: tx history
-/api/v1/transactions/crypto/
-/api/v1/transactions/single-account/
-/api/v1/transactions/tg_transfer_onchain
-/api/v1/transactions/unconfirmed/
-/api/v1/transfers/create_transfer_request/ ← Financial logic target
-/api/v1/transfers/price_for_fiat/
-/api/v1/users/authorize_by_telegram/       ← Auth entry point (initData)
-/api/v1/users/available_networks/
-/api/v1/users/set-visitor-id/
-/api/v1/withdrawals/by_intention/          ← Financial logic target
-/api/v1/withdrawals/validate_amount/
-```
+### Auth Flow
+1. App opens at `walletbot.me` inside Telegram WebApp SDK
+2. `window.WalletStartAuth()` called (Telegram-injected function)
+3. `POST /api/v1/users/authorize_by_telegram/` with `{initData, hash, id}`
+4. Server validates HMAC-SHA256 (confirmed — returns `signature_not_correct` on invalid)
+5. Access token returned in response body
 
-### Microservices (routed via alectryon)
-```
-/alectryon/public-api/auth-refresh         ← Token refresh
-/dactylos/public-api/v1/data               ← Unknown microservice (analytics?)
-/dactylos/public-api/v1/user
-/loyalty/public-api/v1/availability
-/loyalty/public-api/v1/tooltip/ack
-/loyalty/public-api/v1/tooltip/claim
-/onboarding/public-api/v1/offers/
-/onboarding/public-api/v1/offers/dry_run
-/onboarding/public-api/v1/target/
-/p2p/public-api/health
-```
+### Token Transport
+- Main API (`apiHost`): `AuthHeader` security scheme (Bearer token in Authorization header)
+- P2P API: `jwtUserToken` + `credentials:"include"` (cookie-based)
+- Session refresh: `POST /alectryon/public-api/auth-refresh` with `refresh_token` cookie
+  - Returns `{"code":"creds_invalid","detail":"Oops"}` on invalid JWT format
+  - Returns `{"code":"UNAUTHORIZED","detail":"refreshToken is missing in cookie and in request"}` if cookie missing/wrong name
+
+## Confirmed Public Endpoints (No Auth Required)
+
+| Endpoint | Method | Response | Notes |
+|----------|--------|----------|-------|
+| `/api/v1/wallets/get_address_info/{address}` | GET | `{"isExchange":true,"exchangeName":null,"isMemoRequired":false}` | BROKEN — always same response (see finding-LOW-01) |
+| `/api/v1/exchange_rates/price_for_fiat_at_time/` | GET | Live exchange rate | Requires: crypto_currency, local_currency, amount, time params |
+| `/p2p/public-api/health` | GET | `{"name":"p2p-market","status":"OK"}` | Health check |
+| `/alectryon/public-api/health` | GET | `{"name":"alectryon","status":"OK"}` | Health check |
+| `/dactylos/public-api/health` | GET | `{"name":"dactylos","status":"OK"}` | Health check |
+| `/loyalty/public-api/health` | GET | `{"name":"loyalty","status":"OK"}` | Health check |
+| `/users/public-api/health` | GET | `{"name":"user-service","status":"OK"}` | Health check |
+| `/api/v1/users/authorize_by_telegram/` | POST | Auth token | Entry point |
+
+### Exchange Rates Notes
+- Historical data available (tested: 1 day, 1 week, 1 month, 1 year ago)
+- Returns precise rates: `{"rate":"1.428073216716","fiat_amount":"...","currency_from":"TON","currency_to":"USD","amount_from":"1","time":"..."}`
+- Currencies tested: TON, USDT, BTC, ETH vs USD, EUR, THB, RUB
 
 ## Parameterized Endpoints (BOLA Priority Targets)
+
+### Tier 1 — Financial Impact
 ```
-/api/v1/accounts/{crypto_currency}/                              ← per-currency balance
-/api/v1/transactions/details/{transaction_id}/                   ← BOLA: read other tx
-/api/v1/transactions/cancel/{transaction_id}/                    ← BOLA: cancel other tx
-/api/v1/transactions/cancel/pending/{transaction_id}/
-/api/v1/transactions/approve/tg_transfer_onchain/{transaction_id}/  ← BOLA: approve other tx
-/api/v1/transactions/reference_transaction_details/{transaction_id}/
-/api/v1/payment_links/{payment_link_id}/                         ← BOLA: read other links
-/api/v1/payment_links/{payment_link_id}/cancel/
-/api/v1/payment_links/{payment_link_id}/claim/
-/api/v1/payment_links/{payment_link_id}/open/
-/api/v1/giveaways/gift/{gift_uid}/                               ← BOLA: gift info
-/api/v1/giveaways/gift/{gift_uid}/claim                          ← BOLA: steal gift
-/api/v1/giveaways/{giveaway_uid}/gift/
-/api/v1/ipo/info/{ipo_id}/
-/api/v1/ipo/order/{order_uid}/cancel/                            ← BOLA: cancel others' orders
-/api/v1/exchange/submit_exchange/{exchange_uid}/
-/api/v1/coins/catalog/{fiat_currency}
-/api/v1/coins/list/{fiat_currency}/
-/api/v1/coins/trending/{fiat_currency}/
+GET  /api/v1/transactions/details/{transaction_id}/
+GET  /api/v1/transactions/withdraw_details/{transaction_id}/         ← NEW
+POST /api/v1/transactions/cancel/{transaction_id}/
+POST /api/v1/transactions/cancel/pending/{transaction_id}/
+POST /api/v1/transactions/cancel/tg_transfer_onchain/{transaction_id}/  ← NEW
+GET  /api/v1/transactions/tg_transfer_onchain/{transaction_id}       ← NEW
+POST /api/v1/transactions/approve/tg_transfer_onchain/{transaction_id}/
+GET  /api/v1/transactions/reference_transaction_details/{transaction_id}/
 ```
 
-## Known Public Endpoints (no auth)
+### Tier 2 — Financial Links & Gifts
 ```
-POST /api/v1/users/authorize_by_telegram/  ← auth entry, validates HMAC (confirmed)
-GET  /p2p/public-api/health                ← {"name":"p2p-market","status":"OK"}
+GET  /api/v1/payment_links/{payment_link_id}/
+POST /api/v1/payment_links/{payment_link_id}/cancel/
+POST /api/v1/payment_links/{payment_link_id}/claim/                  ← BOLA: steal another's payment
+POST /api/v1/payment_links/{payment_link_id}/open/
+GET  /api/v1/giveaways/gift/{gift_uid}/
+POST /api/v1/giveaways/gift/{gift_uid}/claim                         ← BOLA: steal unclaimed gift
+GET  /api/v1/giveaways/{giveaway_uid}/gift/
+POST /api/v1/ipo/order/{order_uid}/cancel/
 ```
+
+### Tier 3 — P2P BOLA (by-user-id)
+```
+POST /p2p/public-api/v2/offer/order/history/get-by-user-id          ← explicit user_id param
+POST /p2p/public-api/v2/user-statistics/get/by-user-id              ← explicit user_id param
+POST /p2p/public-api/v3/payment-details/get/by-user-id              ← explicit user_id param, payment methods
+POST /p2p/public-api/v2/offer/order/get                             ← order_id in body
+POST /p2p/public-api/v2/offer/get-user-own                         ← own offers
+POST /p2p/public-api/v2/offer/user-own/list                        ← own offer list
+```
+
+### 2-Step Financial Race Condition Targets
+```
+POST /api/v1/transfers/create_transfer_request/
+POST /api/v1/transfers/process_transfer/{transfer_request_id}/
+POST /api/v1/withdrawals/create_withdraw_request/
+POST /api/v1/withdrawals/process_withdraw_request/{withdraw_request_uid}/
+```
+
+## Complete API Endpoint Count
+- **Main API (alectryon)**: 178 endpoints
+- **P2P API**: 89 endpoints
+- **Total**: 267 endpoints
+- **Public (no auth)**: ~8 confirmed public endpoints
+
+## All Microservices Identified
+- `alectryon` — main wallet API (apiHost)
+- `p2p` — P2P trading market
+- `dactylos` — analytics/fingerprinting
+- `loyalty` — loyalty/rewards
+- `onboarding` — onboarding offers/tasks
+- `user-profile` — profile/settings
+- `users` — KYC/verification
+- `referral` — referral programs
+- `portmone` — Portmone payment integration
+- `funds-gateway` — fiat on/off ramp
+- `events-gateway` — event tracking
 
 ## Attack Surface Priority
-1. **`/api/v1/users/authorize_by_telegram/`** — initData replay (old auth_date accepted?); server validates HMAC ✓
-2. **`/api/v1/transactions/details/{transaction_id}/`** — BOLA: can A read B's transaction?
-3. **`/api/v1/transactions/approve/tg_transfer_onchain/{transaction_id}/`** — BOLA: approve another user's transfer
-4. **`/api/v1/payment_links/{payment_link_id}/claim/`** — BOLA: claim another user's payment link
-5. **`/api/v1/giveaways/gift/{gift_uid}/claim`** — BOLA: steal unclaimed gift
-6. **`/api/v1/transfers/create_transfer_request/`** — race condition / negative amount
-7. **`/api/v1/withdrawals/by_intention/`** — withdrawal without sufficient balance
+1. **BOLA `/api/v1/transactions/details/{transaction_id}/`** — UUID or sequential? Can A read B's?
+2. **BOLA `/p2p/public-api/v2/user-statistics/get/by-user-id`** — explicit user_id, can supply other's
+3. **BOLA `/api/v1/payment_links/{payment_link_id}/claim/`** — claim another's payment link
+4. **BOLA `/api/v1/giveaways/gift/{gift_uid}/claim`** — steal unclaimed gift
+5. **Race condition**: create_transfer_request → process_transfer (2-step, concurrent requests)
+6. **Race condition**: create_withdraw_request → process_withdraw_request
+7. **P2P BOLA**: payment-details/get/by-user-id, order/history/get-by-user-id
+8. **Logic**: Approve another user's TG transfer via approve endpoint
 
 ## Telegram WebApp Auth Notes
 - App loads at `walletbot.me`, auth via `/api/v1/users/authorize_by_telegram/`
 - Telegram passes `initData` to TWA on launch (HMAC-SHA256 signed)
 - Server MUST validate HMAC against bot token
-- **Test**: POST `{"initData": "<modified user_id>"}` to auth endpoint
 - `frame-ancestors: 'self' https://web.telegram.org` — must be opened inside Telegram
-
-## Recon Commands (manual — no AI scanning per policy)
-```bash
-# Headers baseline (add H1 header)
-curl -sI "https://walletbot.me" -H "X-HackerOne-Research: kzspy"
-curl -sI "https://alectryon.walletbot.me/api/v1/accounts/" -H "X-HackerOne-Research: kzspy"
-
-# Auth test (no initData → should return 401/403)
-curl -s "https://alectryon.walletbot.me/api/v1/users/authorize_by_telegram/" \
-  -H "Content-Type: application/json" \
-  -H "X-HackerOne-Research: kzspy" \
-  -d '{"initData": "test"}'
-
-# Check JS bundles for more endpoints
-curl -s "https://walletbot.me/static/js/openapi.e66d0a28ee.js" | strings | grep '"/'
-```
+- Developer IDs in JS enable `appdebug` mode via `?startapp=appdebug`
