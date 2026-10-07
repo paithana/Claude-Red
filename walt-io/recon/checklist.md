@@ -2,17 +2,23 @@
 
 ## Setup
 - [ ] Create Telegram account for testing
-- [ ] Sign up at t.me/walt
+- [ ] Sign up at t.me/walt (loads walletbot.me)
 - [ ] Set recovery email to `kzspy@wearehackerone.com`
-- [ ] Set up Burp Suite proxy for Telegram WebApp traffic
+- [ ] Set up Burp Suite proxy for walletbot.me traffic
 - [ ] Confirm `X-HackerOne-Research: kzspy` header on all requests
+- [ ] Note: app loads at `https://walletbot.me` (not walt.io)
 
 ## Authentication
-- [ ] Telegram `initData` HMAC validation — send modified user_id
-- [ ] initData replay attack (old timestamp accepted?)
+- **Base URL**: `https://walletbot.me`
+- **Auth endpoint**: `POST /api/v1/users/authorize_by_telegram/`
+- **Required fields**: `{"hash": "<64-hex>", "id": <int>, "initData": "<urlencoded>"}`
+- **Error on bad hash**: `{"code":"signature_not_correct","detail":"Signature is not correct"}`
+- [ ] Telegram `initData` HMAC validation — server DOES validate (confirmed 2026-10-07)
+- [ ] initData replay attack (old `auth_date` timestamp accepted?)
 - [ ] Recovery email flow — OTP brute force / predictable token
 - [ ] Session token entropy and expiry
 - [ ] Cross-device session invalidation
+- [ ] Debug mode via `?startapp=appdebug` — only allows hardcoded Telegram IDs (INFO: IDs in client JS)
 
 ## Authorization (BOLA/IDOR)
 - [ ] Wallet ID enumeration — increment/GUID swap
