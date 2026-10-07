@@ -1,0 +1,38 @@
+# Credentials & Secrets
+.env*
+.jwt*
+*.key
+*.pem
+secrets/
+
+# Engagement artifacts (may contain sensitive data)
+CLAUDE.md
+CLAUDE.local.md
+.claude/settings.local.json
+
+# Findings & reports (may contain credentials or tactics)
+/reports/
+/evidence/
+/findings/
+*.json
+*.log
+
+# Build & runtime
+__pycache__/
+*.pyc
+.python-version
+.awsalb
+
+# IDE & tools
+.vscode/
+.idea/
+*.swp
+
+# Temporary
+tmp/
+temp/
+/tmp
+
+# Generated
+node_modules/
+venv/
