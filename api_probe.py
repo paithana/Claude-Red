@@ -52,7 +52,7 @@ def req(method, url, headers=None, body=None, timeout=8):
         "Accept":           "application/json",
         "Authorization":    f"Bearer {BEARER}",
         "template":         "vn",
-        "Referer":          "https://m.we88s.plus/th/deposit?component_selected=deposit2",
+        "Referer":          "https://m.we88c.com/th/deposit?component_selected=deposit2",
         "CorrelationID":    str(uuid.uuid4()),
         **({"Cookie": _cookie} if _cookie else {}),
     }

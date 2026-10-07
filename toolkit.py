@@ -20,7 +20,7 @@ CTX.verify_mode = ssl.CERT_NONE
 
 # ─── CONFIG ───────────────────────────────────────────────────────────────────
 TENANTS = {
-    '1': ('wee88z',     '54ef7626cb381f4bab8be91f0cdbce47', 'm.wee88z.com'),
+    '1': ('we88c',      '54ef7626cb381f4bab8be91f0cdbce47', 'm.we88c.com'),
     '2': ('slxoz1688',  '09b2c3ab78fa9e070e9b0517ed1508d5', 'm.slxoz1688.com'),
     '3': ('rs24hr',     'edfaa72cc5de1806ef850db181c96622', 'm.rs24hr.com'),
     '4': ('roll-88',    '9e81e60f8b0e7c9e5859d7f7de4a6872', 'm.roll-88.com'),
@@ -34,6 +34,7 @@ TENANTS = {
 KNOWN_CREDS = {
     'slxoz1688': ('0972571110', 'Aa112233'),
     'vak88z2':   ('0811111111', 'Pwned2026'),
+    'we88c':     ('0972571110', 'Pwned2026'),
 }
 PAPDIEAW_KEY = "649e854e68c88b4fbfa611534e740a10c2c87f42582ae150aad2c3aa49092d80"
 
