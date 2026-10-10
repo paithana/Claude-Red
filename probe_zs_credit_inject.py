@@ -30,10 +30,13 @@ JILI_PROVIDER_ID = "a20e0d50-2faf-11f0-930b-06f3ddf48b9d"
 
 def parse_args():
     p = argparse.ArgumentParser()
+    p.add_argument("amount", nargs="?", type=float, default=None, help="Credit amount THB (positional)")
     p.add_argument("--dry-run", dest="dry_run", action="store_true", default=True)
     p.add_argument("--no-dry-run", dest="dry_run", action="store_false")
-    p.add_argument("--amount", type=float, default=100.0, help="Credit amount THB")
-    return p.parse_args()
+    p.add_argument("--amount", dest="amount_flag", type=float, default=None, help="Credit amount THB (flag)")
+    args = p.parse_args()
+    args.amount = args.amount_flag if args.amount_flag is not None else (args.amount if args.amount is not None else 100.0)
+    return args
 
 def auth(username="0972571110", password="Pwned2026!"):
     r = requests.post(f"{PBAPI_V}/pb/authentication",
