@@ -1,0 +1,63 @@
+{
+  "data": [
+    {
+      "bank_branch_name": "",
+      "bank_code": "GSB",
+      "bank_name_display": "ธนาคารออมสิน",
+      "bank_no": "020451320780",
+      "behavior": "ล่าโปรกลับมาฝากใหม่ 100% ส่งสลิปปลอม สลิปมั่ว หลายยูส ล็อคยาว",
+      "blacklist_by": "Pim",
+      "createdAt": "2024-10-08T09:29:31.4Z",
+      "first_name": "วุฒิชัย",
+      "id": "8c3bfd5e-c7d8-4404-ab0f-cb278b7307fe",
+      "last_name": "พลายม่วง",
+      "user_id": "fcd042a2-8767-4778-a231-f9d8d4f3cce4",
+      "username": "093279xxxx"
+    },
+    {
+      "bank_branch_name": "",
+      "bank_code": "SCB",
+      "bank_name_display": "ธนาคารไทยพาณิชย์",
+      "bank_no": "4110959850",
+      "behavior": "ล่าโปรกลับมาฝากใหม่ 100% ส่งสลิปปลอม สลิปมั่ว หลายยูส ",
+      "blacklist_by": "Pim",
+      "createdAt": "2024-09-28T11:26:20.34Z",
+      "first_name": "อภิวัฒน์",
+      "id": "5bfe0384-62a4-4836-8967-4eb048246be5",
+      "last_name": "พลายม่วง",
+      "user_id": "68f005aa-0d41-40ca-bf5e-1552222be13f",
+      "username": "061069xxxx"
+    },
+    {
+      "bank_branch_name": "",
+      "bank_code": "GSB",
+      "bank_name_display": "ธนาคารออมสิน",
+      "bank_no": "020332247673",
+      "behavior": "ล่าโปรกลับมาฝากใหม่ 100% ส่งสลิปปลอม",
+      "blacklist_by": "Bravo",
+      "createdAt": "2024-09-28T11:25:30.605Z",
+      "first_name": "ศราทิพย์",
+      "id": "40d03d71-c3c8-4622-bbce-ac35e4cadf5d",
+      "last_name": "สังข์ประเสริฐ",
+      "user_id": "61bc0597-2110-45ed-93f8-ba4763de74c6",
+      "username": "092849xxxx"
+    },
+    {
+      "bank_branch_name": "",
+      "bank_code": "KTB",
+      "bank_name_display": "ธนาคารกรุงไทย",
+      "bank_no": "9323031984",
+      "behavior": "ไล่เบทค้างฟรีเกม",
+      "blacklist_by": "0622630648",
+      "createdAt": "2024-02-20T03:44:38.342Z",
+      "first_name": "มายือน๊ะ",
+      "id": "e04328ff-1315-4c96-a13c-88eebb5c1e0b",
+      "last_name": "อาบู",
+      "user_id": "a3093e1e-ee3d-4326-9525-c611e84e7457",
+      "username": "065112xxxx"
+    }
+  ],
+  "limit": 10,
+  "skip": 0,
+  "total": 4
+}
