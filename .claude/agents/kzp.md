@@ -33,16 +33,16 @@ Backend: asdgapicenterssdo.com (FeathersJS/Express/MongoDB)
 ### Tenant Hashes
 | Site | Hash | Status |
 |------|------|--------|
-| wee88z.com | `54ef7626cb381f4bab8be91f0cdbce47` | BLOCKED |
+| we88c.com | `54ef7626cb381f4bab8be91f0cdbce47` | PRIMARY |
 | rs24hr.com | `edfaa72cc5de1806ef850db181c96622` | ACTIVE |
 | slxoz1688.com | `09b2c3ab78fa9e070e9b0517ed1508d5` | Available |
 | roll-88.com | `9e81e60f8b0e7c9e5859d7f7de4a6872` | Available |
-| vak88 | `af6efb584a3d317b5a11ab6209b88e1b` | Available |
+| vak88z2 | `af6efb584a3d317b5a11ab6209b88e1b` | ACTIVE |
 
 ### Auth (Platform A)
 - JWT HS256: `{sub: userId, cf: tenantHash, exp, iat}`
 - Tenant isolation via `cf` claim vs API subdomain
-- wee88z: `strategy: local` + `phoneNumber`
+- we88c: `strategy: local` + `phoneNumber`
 - rs24hr: `strategy: local` + `username`
 - Test creds: `0972571110 / Aa112233` (rs24hr: need fresh JWT)
 
@@ -195,7 +195,7 @@ Alert: `from proxy import tg; tg("message")` or Webmon SSE POST /api/ai/trigger
 2. **curl_cffi** — `impersonate="chrome124"` for API calls
 3. **template header** — `template: vn` required on ALL requests
 4. **TX dedup** — Slip TX refs must be unique
-5. **wee88z blocked** — Use rs24hr or other tenants
+5. **we88c PRIMARY** — wallet 100.81 THB, auto-credits deposits; vak88z2 deprioritized (BO approval required)
 
 ## Platform B
 1. ALL HTTP via `cffi_post()` or `curl_post()` — NEVER `requests.post()`
