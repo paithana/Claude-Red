@@ -8,6 +8,14 @@ Attack chain:
   2. fragment   → POST iframeapi.ifuse-api.com/getLaunchGameData → ssoKey + wallet_url
   3. ssoKey + JILI secret_key (F02) → forge HMAC-signed credit → POST wallet_url/credit
 
+STATUS (2026-10-11):
+  - wallet domain confirmed: wbwebapi.royalflush888.com
+  - /credit path returns 404 — 180+ path variants exhausted (all methods, headers)
+  - only /healthz returns 200 "alive" on that host
+  - hypothesis: wallet routes are IP-restricted to JILI game server IPs at app-router level
+  - credential chain (ssoKey + secret_key) is complete; blocked on IP restriction + correct path
+  - finding remains [POSSIBLE] — if IP restriction bypassed or path resolved, credits exploitable
+
 Usage:
   python3 probe_zs_credit_inject.py [--dry-run] [--amount 100]
   --dry-run : build and print the forged payload, do NOT send it (default)
