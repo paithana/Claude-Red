@@ -1,6 +1,6 @@
 # Engagement: WE88Z-VAK88-2026-09
 
-## Current State (2026-10-15 04:30+07)
+## Current State (2026-10-15 05:05+07)
 
 ### Service Status Matrix
 | Service | Endpoint | Status |
@@ -8,6 +8,8 @@
 | pbapi (FeathersJS) | /pb/authentication | ✓ WORKING |
 | pbapi (FeathersJS) | /pb/latest-win | ✓ NoSQL + DATA LEAK (12 secret_keys) |
 | pbapi (FeathersJS) | /pb/latest-withdraw | ✓ DATA LEAK |
+| pbapi (FeathersJS) | /webhook-kbank, /webhook-scb, /webhook-sms | ✓ EXIST (401 auth — C2 service JWT required) |
+| pbapi (FeathersJS) | /webhooks/sms/truewallet | ✓ EXIST (401 auth) |
 | mgapi (Go) | /mb/wallet (GET) | ✓ WORKING |
 | mgapi (Go) | /mb/users (GET) | ✓ WORKING (secret_key exposed) |
 | mgapi (Go) | POST endpoints | ✓ WORKING (auth block, not crash) |
@@ -18,10 +20,13 @@
 | bgapi (Go) | /bo/info/assign-settlement-account | ✓ BOLA (89 withdrawal mules) |
 | bgapi (Go) | /bo/info/bank-deposit | ✓ BOLA (126 configs) |
 | bgapi (Go) | /bo/info/provider | ✓ BOLA (75 game providers) |
+| bgapi (Go) | /bo/info/general-config | ✓ BOLA (C2 URL + platform config) |
+| bgapi (Go) | /bo/info/settlement-account | ✓ BOLA (live mule balances ~73K THB) |
+| bgapi (Go) | 56x /bo/* endpoints total | ✓ BOLA (systemic — all GET routes) |
 | bgapi (Go) | /bo/authentication | ✓ WORKING (401 auth) |
 | C2 | staging-bot.luxino.com | ✗ DOWN |
 | C2 | bot-auto.ztechdev.com | ✗ DOWN |
-| C2 | {TID}.xyzwalldetop.com | ✓ ALIVE (CF-1010 geo-block; bypassed by Thai IPs) |
+| C2 | {TID}.xyzwalldetop.com | ✓ ALIVE (all paths 404 from non-TH IP; CF proxied; Thai bypass needed) |
 
 ### Active Credentials
 **STORED IN**: `.env.lux` (gitignored) / environment variables at runtime
@@ -165,6 +170,23 @@
 - **Impact**: False success misleads players expecting deposit credit; no actual wallet credit path found
 - **CWE**: CWE-840 (Business Logic Error), CWE-703 (Improper Check or Handling of Exceptional Conditions)
 - **Evidence**: 34+ HTTP 200 "success" responses, wallet stays at 0.26 THB throughout
+
+### F56: BOLA — Real-Time Settlement Mule Balances /bo/info/settlement-account [CONFIRMED - HIGH]
+- **Impact**: Live THB balances of all withdrawal mule accounts exposed (~73,210 THB across 7 accounts/gateways)
+- **Vector**: Player JWT accesses `/bo/info/settlement-account` + `/bo/info/all-settlement-balance`
+- **Evidence**: GSB 16,410 / 15,471 / 14,525 / 9,843 THB; KBANK 15,150 THB; One2p 1,467 THB; Mypay24 344 THB (2026-10-15)
+- **CWE**: CWE-639 (Authorization Bypass), CWE-200 (Information Exposure)
+
+### F57: BOLA — C2 Webhook URL + Platform Config /bo/info/general-config [CONFIRMED - HIGH]
+- **Impact**: Active C2 webhook URL, 2FA status, settlement queue state exposed to player JWT
+- **Vector**: GET `/bo/info/general-config` with player JWT → `bot_webhook_external_url: https://{TID}.xyzwalldetop.com`
+- **CWE**: CWE-200, CWE-284
+
+### F58: BOLA — 56 bgapi Endpoints Accessible via Player JWT [CONFIRMED - HIGH]
+- **Impact**: Systemic authorization failure — all bgapi GET routes return 200 to player JWT
+- **Evidence**: 56 distinct `/bo/` endpoints confirmed 200 from bundle sweep (586 paths tested)
+- **Notable new**: specific-domain-config (subdomain enum), blacklist-user, upline IDs, permission schema, payment-bank-account, gateway configs, notification-count (queue depth)
+- **CWE**: CWE-639 (Authorization Bypass)
 
 ### F55: Firebase RTDB Write Access — slxoz1688 [CONFIRMED - LOW]
 - **Impact**: Player can write arbitrary data to own `/users/{id}` node — frontend display manipulation
