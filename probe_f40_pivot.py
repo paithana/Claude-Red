@@ -1,0 +1,2 @@
+  # [paste script above]
+  SCRIPT
