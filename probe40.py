@@ -48,42 +48,36 @@ if not jwt:
 
 H["Authorization"] = f"Bearer {jwt}"
 
-# ── Step 1: enumerate game providers for JILI ─────────────────────────────────
-print("\n[STEP 1] GET /mb/game-category — find JILI provider code...")
-r = requests.get(f"{MGAPI}/mb/game-category", headers=H, timeout=15)
-print(f"  {r.status_code}: {r.text[:400]}")
+# JILI provider_id on vak88z2 (from pb/game-list enumeration 2026-10-15)
+JILI_PROVIDER_ID = "a20e0d50-2faf-11f0-930b-06f3ddf48b9d"
+PBAPI = f"https://{TID}pbapi.asdgapicenterssdo.com"
 
-print("\n[STEP 1] GET /mb/payment-type?include=true — enumerate...")
-r = requests.get(f"{MGAPI}/mb/payment-type?include=true", headers=H, timeout=15)
-jili_game_ids = []
+# ── Step 1a: pb/game-list to find a JILI game_list_id ────────────────────────
+print("\n[STEP 1a] GET /pb/game-list — find JILI game_list_id ...")
+r = requests.get(f"{PBAPI}/pb/game-list", headers=H,
+    params={"$limit": 200, "domain": "m.vak88z2.com"}, timeout=15)
+d0 = r.json() if r.ok else {}; total = d0.get('total','?') if isinstance(d0,dict) else len(d0); print(f'  {r.status_code}: total={total}')
+game_list_id = None
+game_name = None
 if r.ok:
-    # Parse for JILI game entries
-    text = r.text
-    jili_idx = text.lower().find("jili")
-    print(f"  JILI mention at idx={jili_idx}: ...{text[max(0,jili_idx-50):jili_idx+100]}...")
+    items = r.json() if isinstance(r.json(), list) else r.json().get("data", [])
+    jili = [g for g in items if g.get("provider_id") == JILI_PROVIDER_ID]
+    print(f"  JILI games found: {len(jili)}")
+    for g in jili[:5]:
+        print(f"    id={g.get('id')} name={g.get('name')}")
+    if jili:
+        game_list_id = jili[0]["id"]
+        game_name = jili[0].get("name", "?")
 
-# ── Step 1a: get game list and find a JILI game to launch ────────────────────
-print("\n[STEP 1a] GET /mb/game?provider=zgmulti_jili&limit=5 ...")
-r = requests.get(f"{MGAPI}/mb/game?provider=zgmulti_jili&limit=5", headers=H, timeout=15)
-print(f"  {r.status_code}: {r.text[:500]}")
-game_id = None
-if r.ok:
-    try:
-        games = r.json().get("data") or r.json()
-        if isinstance(games, list) and games:
-            game_id = games[0].get("id") or games[0].get("game_id")
-            print(f"  first JILI game_id: {game_id}")
-    except Exception:
-        pass
-
-# Also try a known JILI game ID from prior sessions
-if not game_id:
-    game_id = "clover-coins-3x5"  # from F40 evidence in report
+if not game_list_id:
+    game_list_id = "5048a0a5-deba-4453-8d04-31e3293bf2e7"  # Clover Coins 3x5 (2026-10-15)
+    game_name = "Clover Coins 3x5"
+    print(f"  [FALLBACK] using known game_list_id: {game_list_id}")
 
 # ── Step 1b: /mb/enter-game (in-scope) ───────────────────────────────────────
-print(f"\n[STEP 1b] POST /mb/enter-game game_id={game_id} ...")
+print(f"\n[STEP 1b] POST /mb/enter-game game_list_id={game_list_id} ({game_name}) ...")
 r = requests.post(f"{MGAPI}/mb/enter-game",
-    json={"game_id": game_id, "device": "desktop"},
+    json={"game_list_id": game_list_id, "languageCode": "th"},
     headers=H, timeout=20)
 print(f"  {r.status_code}: {r.text[:600]}")
 
@@ -91,30 +85,26 @@ game_url = None
 if r.ok:
     try:
         d = r.json()
-        game_url = (d.get("data") or d).get("url") or (d.get("data") or d).get("launch_url")
+        game_url = (d.get("result") or d.get("data") or d).get("url")
         print(f"\n  game_url: {game_url}")
     except Exception:
         pass
 
-# ── Step 1c: parse 'be=' callback host from game URL (local, no OOB call) ────
+# ── Step 1c: extract Z-Seamless token fragment (local parse, no OOB call) ────
 be_host = None
-if game_url:
-    import urllib.parse
-    parsed = urllib.parse.urlparse(game_url)
-    params = urllib.parse.parse_qs(parsed.query)
-    be_enc = params.get("be", [None])[0]
-    if be_enc:
-        be_host = be_enc[::-1]  # reversed domain
-        print(f"\n[STEP 1c] be= param: {be_enc!r}")
-        print(f"          reversed  : {be_host}")
-    # Also look for ssoKey
-    sso_key = params.get("ssoKey", [None])[0]
-    api_id  = params.get("apiId", [None])[0]
-    print(f"  ssoKey: {sso_key!r}")
-    print(f"  apiId:  {api_id!r}")
+fragment = None
+if game_url and "ifgtameh.site" in game_url:
+    fragment = game_url.split("#", 1)[1] if "#" in game_url else None
+    print(f"\n[STEP 1c] Z-Seamless fragment: {fragment[:60] if fragment else 'NONE'}...")
+    print(f"  → Step 2 (iframeapi.ifuse-api.com/getLaunchGameData) is OUT OF SCOPE")
+    print(f"  → ssoKey, apiId, and be= would be returned by that call")
+    # Fallback values for HMAC proof
+    sso_key = "ea5631f7ed7cc16bba619cc1f561ad6b4aacf151"  # from 2026-10-11 session
+    api_id  = "1701"
+    be_host = "wbwebapi.royalflush888.com"
 else:
-    print("  [WARN] no game_url obtained — cannot parse callback params")
-    sso_key = "ea5631f7ed7cc16bba619cc1f561ad6b4aacf151"  # from prior session evidence
+    print("  [WARN] no ifgtameh.site game_url obtained — cannot extract fragment")
+    sso_key = "ea5631f7ed7cc16bba619cc1f561ad6b4aacf151"
     api_id  = "1701"
     be_host = "wbwebapi.royalflush888.com"
     print(f"  [FALLBACK] using session-evidence values")
