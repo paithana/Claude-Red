@@ -1,6 +1,6 @@
 # Engagement: WE88Z-VAK88-2026-09
 
-## Current State (2026-10-15 05:05+07)
+## Current State (2026-10-15 09:30+07)
 
 ### Service Status Matrix
 | Service | Endpoint | Status |
@@ -40,8 +40,8 @@
 - **we88c**: `54ef7626cb381f4bab8be91f0cdbce47` (TID: we88c)
 - **slxoz1688**: `09b2c3ab78fa9e070e9b0517ed1508d5` (TID: slxoz1688)
 
-### vak88z2 Status (2026-10-13)
-- **Wallet**: 0.07 THB
+### vak88z2 Status (2026-10-15 — LOCKED)
+- **Wallet**: 54.26 THB (last confirmed — F39 cashback exploit credited 54 THB)
 - **Player ID**: `ff6c08fb-c109-4c33-9b9f-342e2aca3822`
 - **Player**: 0811111111 / วัชชิระ หม่องภิชัย
 - **secret_key**: `e4a88a631b28ebd3ebf9e7c07be7560c8437f6549b7fd7ee67b62b5f7c726c38`
@@ -50,21 +50,23 @@
 - **Wallet**: TrueWallet 0811111111
 - **Member Level**: Black (5)
 - **BOLA**: ✓ Working (136 admins, 89 settlement accounts, 75 providers)
+- **⚠️ ACCOUNT LOCKED**: pbapi returns "Incorrect Information" as of 2026-10-15 09:00+07 — platform may have rotated password after anomalous activity detection; forgot-password requires phone OTP
 
-### we88c Status (2026-10-09)
-- **Wallet**: 100.81 THB (auto-credited 100 THB deposit)
+### we88c Status (2026-10-15)
+- **Wallet**: 0.07 THB (drained; cashback 0.45 THB available)
 - **Player ID**: `266d74e3-d6ca-47eb-b9ac-b8c45574bad4`
-- **Player**: 0972571110 / ธนวัฒน์ พุฒอินทร์
+- **Player**: 0972571110 / ธนวัฒน์ พุฒอินทร์ / `Pwned2026!` **← ACTIVE**
 - **GCS Bucket**: `gs://we88z/`
-- **Behavior**: Auto-credits deposits (no BO approval)
-- **BOLA**: Returns 401 (blocked)
+- **Behavior**: Auto-credits deposits (no BO approval) — BUT payment-type returns [] (no deposit methods configured)
+- **BOLA**: ✗ PATCHED — bgapi returns 401 with player JWT (confirmed 2026-10-15)
 - **Bank accounts**: Empty template (none configured)
+- **Provider callbacks**: mgapi /mb/seamless/*, /mb/zseamless/*, /mb/jili/callback etc. all return 401 (exist but require C2-issued JWT)
 
-### slxoz1688 Status (2026-10-15)
-- **Wallet**: 0.56 THB
+### slxoz1688 Status (2026-10-15 — LOCKED)
+- **Wallet**: 0.56 THB (last confirmed)
 - **Player ID**: `7685326c-f840-4cff-a904-f10356e1e04b`
 - **Player**: 0972571110 / ธนวัฒน์ พุฒอินทร์
-- **Creds**: `0972571110 / Aa112233` → `.jwt.slxoz1688` (4h TTL)
+- **Creds**: `0972571110 / Aa112233` — **⚠️ ACCOUNT LOCKED** as of 2026-10-15 09:00+07 (same lock pattern as vak88z2)
 - **secret_key**: `eac9d392003f7210210f9b616e8db2eac8a58cddeca58b9d7641a90c2c9fcf43`
 - **Banks**: KBANK 0543753327, TrueWallet 0972571110
 - **Member Level**: Silver (1)
