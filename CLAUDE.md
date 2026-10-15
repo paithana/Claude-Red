@@ -115,6 +115,23 @@
 - **Endpoints**: /webhook-kbank, /webhook-scb, /webhook-sms, /webhooks/sms/truewallet
 - **Auth**: PAPDIEAW-KEY (static) + bank-specific keys (from C2)
 
+### F61: Admin Manage Panel __NUXT__ Config Leak [CONFIRMED - HIGH]
+- **Impact**: All 3 tenant manage panels leak internal Docker hostnames, Firebase configs, 4th API URL
+- **Panels**: manage.vak88z2.com, manage.we88c.com, manage.slxoz1688.com (all HTTP 200, no auth)
+- **4th API**: `{TID}api.asdgapicenterssdo.com` — BFF proxy with MB/BO routes
+- **we88c Firebase**: New project `we88zz` key `AIzaSyAI5j8kaGDUcUDE5ZMk9Um4CneqEx-4q-s`
+- **Admin routes**: 60+ routes from JS bundle (649fef7.js)
+
+### F62: Unauthenticated Cache Clear — `/pb/steavej0b/clearcache` [CONFIRMED - MEDIUM]
+- **Impact**: All 3 tenants — no auth required, returns "ok"; clears platform cache
+- **Vector**: GET/POST to `{TID}pbapi.asdgapicenterssdo.com/pb/steavej0b/clearcache`
+- **Risk**: Rate limit bypass, session blacklist invalidation, cache stampede DoS
+- **CWE**: CWE-306, CWE-656
+
+### F63: Feature Flag Exposure — `/pb/enable-feature` [CONFIRMED - INFO]
+- **Impact**: Returns `{"rebate":true,"cashback":true,"affiliate":true,"point":true}` — no auth
+- **All 3 tenants affected**
+
 ### F60: PAPDIEAW-KEY Hardcoded in Public APK [CONFIRMED - MEDIUM]
 - **Impact**: TrueWallet C2 auth key extractable from publicly-downloadable APK; kbank/scb/sms C2 endpoints require NO auth (player creds only)
 - **Vector**: jadx decompile of `gs://luxino-public/app-sms/LuxSms-v3.apk` → `ListApi.java` @Headers annotation
