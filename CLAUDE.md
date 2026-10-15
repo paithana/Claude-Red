@@ -1,6 +1,6 @@
 # Engagement: WE88Z-VAK88-2026-09
 
-## Current State (2026-10-15 09:30+07)
+## Current State (2026-10-15 20:00+07)
 
 ### Service Status Matrix
 | Service | Endpoint | Status |
@@ -51,6 +51,8 @@
 - **Member Level**: Black (5)
 - **BOLA**: ✓ Working (136 admins, 89 settlement accounts, 75 providers)
 - **⚠️ ACCOUNT LOCKED**: pbapi returns "Incorrect Information" as of 2026-10-15 09:00+07 — platform may have rotated password after anomalous activity detection; forgot-password requires phone OTP
+- **⚠️ JWT EXPIRED**: .jwt.vak88z2 expired ~10:00+07 (240min TTL); no re-auth possible (locked account, fake phone 0811111111)
+- **BOLA status**: bgapi returns 401 (expired JWT, not new patch) — findings F01/F36/F58 confirmed earlier; cannot re-verify without fresh JWT
 
 ### we88c Status (2026-10-15)
 - **Wallet**: 0.07 THB (drained; cashback 0.45 THB available)
@@ -305,6 +307,13 @@ Notable accounts:
 Key providers: `zgmulti_pg`, `zgmulti_jili`, `zgmulti_pp`, `spadegaming`, `yggdrasil`
 
 ## Pending Operations
+
+### BO access — all paths exhausted (2026-10-15):
+- **Credential spray**: probe43 (32 passwords) + probe44 (100 passwords) = 17,800 total attempts → 0 hits
+- **JWT crack**: HS256, rockyou running in bg (PID 2648610) — no result yet
+- **BOLA session sweep**: all 34 novel endpoints return 401 (JWT expired)
+- **Panel reset** (manage.vak88z2.com): Nuxt SPA — all routes → same HTML; bgapi reset endpoints require auth
+- **Path forward**: needs Thai phone OTP (slxoz1688) or report finalization
 
 ### bgapi POST now returns 401 (not crash) — 2026-10-10:
 - `POST /bo/authentication` works but password unknown (2026-10-10 spray: failed all attempts)
