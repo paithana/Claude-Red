@@ -61,13 +61,17 @@ for t in tenants:
     print(f"  cashback: {r2.status_code} {r2.text[:300]}")
 
     available = 0.0
-    if r2.ok:
-        try:
-            d = r2.json()
-            available = float((d.get("data") or d).get("available", 0))
-            print(f"  available cashback: {available} THB")
-        except Exception:
-            pass
+    for resp in [r, r2]:
+        if resp.ok:
+            try:
+                d = resp.json()
+                val = (d.get("data") or d).get("available")
+                if val is not None:
+                    available = float(val)
+                    print(f"  available cashback: {available} THB")
+                    break
+            except Exception:
+                pass
 
     if available <= 0:
         print(f"  [SKIP] No available cashback — skipping transfer probe")
