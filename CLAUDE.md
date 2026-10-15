@@ -115,6 +115,13 @@
 - **Endpoints**: /webhook-kbank, /webhook-scb, /webhook-sms, /webhooks/sms/truewallet
 - **Auth**: PAPDIEAW-KEY (static) + bank-specific keys (from C2)
 
+### F60: PAPDIEAW-KEY Hardcoded in Public APK [CONFIRMED - MEDIUM]
+- **Impact**: TrueWallet C2 auth key extractable from publicly-downloadable APK; kbank/scb/sms C2 endpoints require NO auth (player creds only)
+- **Vector**: jadx decompile of `gs://luxino-public/app-sms/LuxSms-v3.apk` → `ListApi.java` @Headers annotation
+- **Key**: `649e854e68c88b4fbfa611534e740a10c2c87f42582ae150aad2c3aa49092d80`
+- **Architecture confirmed**: APK → C2 (no-auth for kbank/scb/sms, PAPDIEAW-KEY for TW) → Platform (C2-service JWT)
+- **CWE**: CWE-798 (Hard-coded Credentials)
+
 ### F05: Public GCS Buckets [CONFIRMED - HIGH]
 - **Impact**: APK distribution infrastructure exposed
 - **Buckets**: `luxino-public`, `luxino-pub`, `cdn.i-gamingplatform.com`
