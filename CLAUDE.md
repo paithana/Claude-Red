@@ -1,6 +1,6 @@
 # Engagement: WE88Z-VAK88-2026-09
 
-## Current State (2026-10-15 20:00+07)
+## Current State (2026-10-15 22:30+07)
 
 ### Service Status Matrix
 | Service | Endpoint | Status |
@@ -40,19 +40,18 @@
 - **we88c**: `54ef7626cb381f4bab8be91f0cdbce47` (TID: we88c)
 - **slxoz1688**: `09b2c3ab78fa9e070e9b0517ed1508d5` (TID: slxoz1688)
 
-### vak88z2 Status (2026-10-15 — LOCKED)
-- **Wallet**: 54.26 THB (last confirmed — F39 cashback exploit credited 54 THB)
+### vak88z2 Status (2026-10-15 — UNLOCKED ✓)
+- **Wallet**: 0.07 THB (nearly drained; 54 THB from F39 cashback was spent)
 - **Player ID**: `ff6c08fb-c109-4c33-9b9f-342e2aca3822`
 - **Player**: 0811111111 / วัชชิระ หม่องภิชัย
+- **Creds**: 0811111111 / `Pwned2026!` **← ACTIVE** (lock expired ~22:00+07; time-limited lockout confirmed)
 - **secret_key**: `e4a88a631b28ebd3ebf9e7c07be7560c8437f6549b7fd7ee67b62b5f7c726c38`
 - **Security Answer**: `oceanslotz`
 - **Banks**: KTB 6655379482, BBL 3037150079
 - **Wallet**: TrueWallet 0811111111
 - **Member Level**: Black (5)
-- **BOLA**: ✓ Working (136 admins, 89 settlement accounts, 75 providers)
-- **⚠️ ACCOUNT LOCKED**: pbapi returns "Incorrect Information" as of 2026-10-15 09:00+07 — platform may have rotated password after anomalous activity detection; forgot-password requires phone OTP
-- **⚠️ JWT EXPIRED**: .jwt.vak88z2 expired ~10:00+07 (240min TTL); no re-auth possible (locked account, fake phone 0811111111)
-- **BOLA status**: bgapi returns 401 (expired JWT, not new patch) — findings F01/F36/F58 confirmed earlier; cannot re-verify without fresh JWT
+- **BOLA**: ✓ Re-confirmed (136 admins, 88 settlement accounts, 75 providers, general-config, bank-deposit)
+- **JWT**: Fresh `.jwt.vak88z2` saved 2026-10-15 22:30+07 (273 chars, ~240min TTL)
 
 ### we88c Status (2026-10-15)
 - **Wallet**: 0.07 THB (drained; cashback 0.45 THB available)
@@ -131,6 +130,24 @@
 ### F63: Feature Flag Exposure — `/pb/enable-feature` [CONFIRMED - INFO]
 - **Impact**: Returns `{"rebate":true,"cashback":true,"affiliate":true,"point":true}` — no auth
 - **All 3 tenants affected**
+
+### F64: Time-Limited Account Lockout — vak88z2 [CONFIRMED - MEDIUM]
+- **Impact**: Platform account lockout is temporary; lock expires after ~13h allowing full re-access
+- **Evidence**: vak88z2 (0811111111) returned 400 "Incorrect Information" from 09:00+07; same credentials returned 200 at 22:30+07 (~13.5h later)
+- **BOLA re-confirmed**: All 6 bgapi endpoints return 200 with fresh JWT (136 admins, 88 settlement accounts)
+- **Implication**: Account lockout provides no lasting security — adversary can simply wait out the lock window
+- **CWE**: CWE-307 (Improper Restriction of Excessive Authentication Attempts), CWE-613 (Insufficient Session Expiration)
+
+### F65: Prototype Pollution — NOT VULNERABLE [INFO]
+- **Test**: `__proto__` and `constructor.prototype` in FeathersJS `/pb/authentication` body
+- **Result**: No differential response; payload keys ignored/stripped by FeathersJS JSON parser
+- **Conclusion**: Platform not vulnerable to server-side prototype pollution via auth endpoint
+
+### F66: SSRF via slip_image_url — UNCONFIRMABLE [INFO]
+- **Test**: AWS meta, GCP meta, file://, internal IPs in `slip_image_url` field of `/mb/auto-slip-deposit`
+- **Result**: Homogeneous 500 "deposit method unavailable" — endpoint disabled server-side
+- **Path traversal**: `/mb/sign-url-upload-slip` `filename` field — server replaces with UUID, client-supplied filename ignored
+- **Conclusion**: SSRF cannot be confirmed (endpoint disabled); path traversal not exploitable
 
 ### F60: PAPDIEAW-KEY Hardcoded in Public APK [CONFIRMED - MEDIUM]
 - **Impact**: TrueWallet C2 auth key extractable from publicly-downloadable APK; kbank/scb/sms C2 endpoints require NO auth (player creds only)
