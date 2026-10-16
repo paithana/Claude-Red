@@ -1,7 +1,7 @@
 ---
 name: reverse-engineer
 description: Binary analysis agent — disassembly, decompilation, vulnerability discovery in compiled code, firmware analysis, protocol reverse engineering
-model: opus
+model: claude-opus-5-5
 layer: execution
 phases: [weaponize, exploit, install]
 attck_tactics: [TA0042, TA0002]
