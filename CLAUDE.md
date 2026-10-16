@@ -1,6 +1,6 @@
 # Engagement: WE88Z-VAK88-2026-09
 
-## Current State (2026-10-17 06:04+07)
+## Current State (2026-10-17 06:22+07)
 
 ### Service Status Matrix
 | Service | Endpoint | Status |
@@ -25,7 +25,8 @@
 | mgapi (Go) | /mb/deposit-gateway (AZPAY-QR) | ✓ LIVE — returns EMVCo2 PromptPay QR + order_id (200 THB min, 15min TTL) |
 | mgapi (Go) | /mb/deposit-gateway (ONE2P-LOCAL) | ✗ UNAVAILABLE — 400 (was LIVE 2026-10-15; now down) |
 | mgapi (Go) | /mb/deposit-gateway (POMPAY-QR) | ✓ INTERMITTENT — returns ppasia.co payUrl (100 THB min) |
-| mgapi (Go) | /mb/deposit-gateway (others) | ✗ UNAVAILABLE (ALPHAPAY, ALPHAPAY2, MYPAYS24, PROMPTPAY all 400) |
+| mgapi (Go) | /mb/deposit-gateway (MYPAYS24-LOCAL) | ✗ INTERMITTENT (400 as of 06:20; was LIVE earlier; returns `dest_upload_slip_url` → deposit.sysglobalconnect.com; `use_raw_slip:true`) |
+| mgapi (Go) | /mb/deposit-gateway (others) | ✗ UNAVAILABLE (ALPHAPAY, ALPHAPAY2, PROMPTPAY all 400; KISSVIP 400) |
 | mgapi (Go) | /mb/deposit-gateway-slip | ✓ ACTIVE OCR — EasySlip verification running; 400 on fake; 401 not 500 |
 | mgapi (Go) | /mb/azpay/callback, /mb/pompay/callback, /mb/one2p/callback | ✓ EXIST (401 — gateway-issued Bearer JWT required; not player JWT, not C2 JWT) |
 | mgapi (Go) | /mb/sign-url-upload-slip | ✓ WORKING (GCS signed URL) |
@@ -60,7 +61,7 @@
 - **we88c**: `54ef7626cb381f4bab8be91f0cdbce47` (TID: we88c)
 - **slxoz1688**: `09b2c3ab78fa9e070e9b0517ed1508d5` (TID: slxoz1688)
 
-### vak88z2 Status (2026-10-17 06:00+07 — UNLOCKED ✓)
+### vak88z2 Status (2026-10-17 06:14+07 — UNLOCKED ✓)
 - **Wallet**: 0.07 THB | deposit_total: 5,526 THB | cashback_avail: 1.54 | rebate_avail: 2.79 | affiliate_avail: 3.32 | points: 11.18
 - **Pending deposits**: 51 in queue (auto-slip worker disabled; status_deposit: false)
 - **Player ID**: `ff6c08fb-c109-4c33-9b9f-342e2aca3822`
@@ -75,7 +76,20 @@
 - **Firebase API key**: `AIzaSyAELPsIAYigvKgJBAsbl_3WM9_tNOr5UiE` (from m.vak88z2.com __NUXT__)
 - **Firebase custom token**: GET `/mb/firebase-token` → exchange at `identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken`
 - **Firebase RTDB write**: ✓ CONFIRMED — player can PATCH/PUT `/users/{id}/*` (no backend trigger; wallet unaffected)
-- **Credit vectors exhausted**: transfer locked; callbacks 401; bgapi adjust 401; redeem-exchange-point 500; AZPAY-QR live but needs real payment
+- **Credit vectors — ALL EXHAUSTED (2026-10-17)**:
+  - cashback/rebate/affiliate-transfer: 400 "system in progress" + all below 10 THB min
+  - Gateway callbacks (AZPAY/POMPAY/MYPAYS24): 401 gateway-issued JWT required
+  - deposit-gateway-slip (EasySlip): OCR verifies real transactions; fake slip 400
+  - MYPAYS24 sysglobalconnect.com flow: full chain mapped (upload→update-payload→chk-slip); real QR verified against Thai bank records; 60-min TTL enforced server-side
+  - QR forging: CRC16/CCITT at last 4 bytes confirmed; modifying timestamp byte → "Slip not found" (external API verifies QR against bank DB, changed bytes = no matching tx record)
+  - **sysglobalconnect 60-min window mechanics (confirmed 2026-10-17)**:
+    - `chk-slip-by-id.php` response includes `dep:{order_creation_time}|slip:{qr_embedded_time}`
+    - Real QR CTF083665 (slip: 16-10-2026 21:01:57) → "สลิปเกินเวลา 60 นาที" (dep: 17-10-2026 06:03:09)
+    - Fail condition: `|order_create_time - slip_time| > 60 min` — NOT order vs current time
+    - To pass: need fresh real QR where slip_time is within 60 min of a new deposit order creation
+    - CTF prefix = KBank transaction reference
+  - Firebase RTDB, bgapi adjust: no backend wallet trigger
+  - **Unblocked only by**: real bank transfer ≤60 min old to active mule (TTB/SCB/GSB), QR extracted from bank app within 60 min window
 
 ### we88c Status (2026-10-15)
 - **Wallet**: 0.07 THB (drained; cashback 0.45 THB available)
@@ -351,6 +365,22 @@
 - **Vector**: POST `/mb/deposit-gateway` with id `59251130-7cf4-47bd-a9c7-af899f5b1ab9` (MYPAYS24-LOCAL) → 200, dest TTB 9197841712
 - **Note**: Not in F36 withdrawal pool, F52 deposit pool, or F81 ONE2P pool — unique new mule
 - **CWE**: CWE-639 (BOLA), CWE-200 (Information Exposure)
+
+### F84: sysglobalconnect.com Slip Verification Service Internal Flow [CONFIRMED - MEDIUM]
+- **Impact**: MYPAYS24-LOCAL exposes full PHP slip upload service URL (deposit.sysglobalconnect.com) unauthenticated except by session cookie from order URL params; internal 3-step verification flow mapped
+- **Vector**: `dest_upload_slip_url` in deposit-gateway response → `https://deposit.sysglobalconnect.com/process/deposit?h={HX}&txn=p2p-{ORDER_ID}&oid={ORDER_ID}&d={IDX}&pt={PT}` → PHPSESSID issued
+- **Flow**:
+  1. GET `/process/deposit?h=HX&txn=...&oid=...&d=IDX&pt=PT` → PHPSESSID (session auth)
+  2. POST `/process/upload-slip-by-id.php?id=IDX&h=HX` (multipart file) → slip stored
+  3. POST `/process/update-payload.php?id=IDX&h=HX` (payload=QR_STRING) → update QR
+  4. POST `/process/chk-slip-by-id.php?id=IDX&h=HX` → external bank API call
+- **External API response format**: `{"success":false,"message":"สลิปเกินเวลา 60 นาที หรือเป็นสลิปเก่า|dep:17-10-2026 06:03:09|slip:16-10-2026 21:01:57"}`
+  - Leaks deposit order creation timestamp and slip timestamp from QR
+  - "Slip too old" = real QR but outside 60-min window
+  - "Slip not found" = unrecognized QR (fake or wrong bytes)
+- **QR format (confirmed)**: 59 chars; CRC16/CCITT over first 55 chars → last 4 hex; time HHMMSS at bytes 31-36; TX ref (bank+6digits) at bytes 37-45 (e.g. CTF=KBank, DTF=TTB)
+- **Real TX confirmed**: CTF083665 (KBank) exists in bank DB — "too old" response, not "not found"
+- **CWE**: CWE-200 (Information Exposure), CWE-306 (Missing Authentication)
 
 ### F81: ONE2P-LOCAL Live Gateway — KBANK Mule + Player PII in Order API [CONFIRMED - HIGH]
 - **Impact**: New mule KBANK `0858380200` / วทัญญู เพชรดี exposed; player's own KTB 6655379482 appears as `sender` in slip.jvzvavs.space order info API
