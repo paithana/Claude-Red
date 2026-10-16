@@ -5,6 +5,9 @@
       "effortLevel": "high"
     }
   },
+  "env": {
+    "REA_JADX_MCP_JAR": "/home/kzp/.rea/jars/jadx-headless-mcp-0.7.1-all.jar"
+  },
   "permissions": {
     "defaultMode": "auto",
     "allow": [
