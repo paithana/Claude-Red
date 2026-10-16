@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-17T05:49:34+07:00",
+  "generated": "2026-10-17T06:05:42+07:00",
   "engagement": "WE88Z-VAK88-2026-09",
   "tenants": {
     "vak88z2": "af6efb584a3d317b5a11ab6209b88e1b",
@@ -1282,7 +1282,12 @@
       "auth": "player_jwt",
       "status": 200,
       "finding": "F52",
-      "notes": "Deposit mule pool exposure; BOLA"
+      "notes": "43/67 mule IDs active; 6 unique dest banks incl new TTB 9197841712; saved mule_gw_active_2026-10-17.json",
+      "findings": [
+        "F52",
+        "F82",
+        "F83"
+      ]
     },
     {
       "host": "mgapi",
@@ -4567,7 +4572,10 @@
       "auth": "player_jwt_bola",
       "status": 200,
       "finding": "F58",
-      "notes": "Payment bank accounts"
+      "notes": "67 deposit mule accounts + IDs; 43 active via deposit-gateway probe",
+      "findings": [
+        "F82"
+      ]
     },
     {
       "host": "bgapi",
@@ -8103,7 +8111,12 @@
       "auth": "player_jwt",
       "status": 200,
       "finding": "F52",
-      "notes": "AZPAY-QR/ONE2P-LOCAL/POMPAY-QR live; exposes mule accounts"
+      "notes": "43/67 mule IDs active; 6 unique dest banks incl new TTB 9197841712; saved mule_gw_active_2026-10-17.json",
+      "findings": [
+        "F52",
+        "F82",
+        "F83"
+      ]
     },
     {
       "host": "mgapi",
@@ -8543,5 +8556,6 @@
       "404": 2,
       "403": 2
     }
-  }
+  },
+  "total_findings": 83
 }

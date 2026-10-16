@@ -1,6 +1,6 @@
 # Engagement: WE88Z-VAK88-2026-09
 
-## Current State (2026-10-17 05:50+07)
+## Current State (2026-10-17 06:04+07)
 
 ### Service Status Matrix
 | Service | Endpoint | Status |
@@ -329,13 +329,28 @@
 - **CWE**: CWE-284 (Improper Access Control)
 - **Note**: Prior DEPOSIT_APPROVE entries from previous sessions in RTDB (never triggered wallet credit)
 
-### F82: BOLA — 67 Deposit Mule Accounts via /bo/info/payment-bank-account [CONFIRMED - HIGH]
-- **Impact**: Full deposit mule pool exposed — 67 accounts including names, bank numbers, account types; 53 with explicit bank account numbers
-- **Vector**: Player JWT GET `/bo/info/payment-bank-account` → complete deposit-reception mule roster
-- **Account breakdown**: SCB(23), GSB(9), AUTO-SLIP(6), TRUEWALLET(6), KBANK(1), KTB(4), gateways (AlphaPay/MyPay24/One2p/PomPay/AZPAY 18)
-- **Extends**: F52 (deposit gateways expose 4 mules), F36 (89 withdrawal mules) — this is the deposit-side pool
-- **Saved**: `data/json/vak88z2_extract/bo_payment_bank_account_2026-10-17.json`
+### F82: BOLA — 67 Deposit Mule Accounts + Active Route Mapping [CONFIRMED - HIGH]
+- **Impact**: Full deposit mule pool exposed (67 accounts); 43/67 IDs confirmed active via deposit-gateway probe → 6 unique live bank destinations
+- **Vector**: Player JWT GET `/bo/info/payment-bank-account` → complete mule roster; cross-ref via POST `/mb/deposit-gateway` per ID
+- **Account breakdown**: SCB(23), GSB(9), AUTO-SLIP(6), TRUEWALLET(6), KBANK(1), KTB(4), gateways 18
+- **Active route map (2026-10-17)**:
+  - SCB — all 23 IDs → `SCB 1704275050` น.ส. ชลธิชา คำมี
+  - GSB (7/9 IDs) → `GSB 020486841602` น.ส.ณัชชา พาจันทร์
+  - GSB (2/9 IDs) → `GSB 020471576973` นาง จรี นุ่มลมูล
+  - KTB — all 4 IDs → `KTB 0170738035` บจก. ซู ซู ช้อบ 789 (**SUSPENDED** พักใช้)
+  - KBANK — 1 ID → `KBANK 2178190108` สิรินภา (**โอนเข้าไม่ได้**)
+  - MYPAYS24-LOCAL → `TTB 9197841712` น.ส. ภัทศา พรรณภักดี (**NEW mule**)
+  - AZPAY-QR, POMPAY-QR, PROMPTPAY(3) → QR (no named bank dest)
+  - TRUEWALLET(6), AUTO-SLIP(6) → ISE (backend/worker down)
+- **Extends**: F52 (deposit gateways), F36 (withdrawal mules), F53 (suspended still routed)
+- **Saved**: `data/json/vak88z2_extract/bo_payment_bank_account_2026-10-17.json` + `mule_gw_active_2026-10-17.json`
 - **CWE**: CWE-639 (Authorization Bypass), CWE-200 (Information Exposure)
+
+### F83: MYPAYS24-LOCAL Live — New TTB Mule 9197841712 Exposed [CONFIRMED - HIGH]
+- **Impact**: MYPAYS24-LOCAL gateway live and routes to previously undiscovered mule: `TTB 9197841712` / น.ส. ภัทศา พรรณภักดี
+- **Vector**: POST `/mb/deposit-gateway` with id `59251130-7cf4-47bd-a9c7-af899f5b1ab9` (MYPAYS24-LOCAL) → 200, dest TTB 9197841712
+- **Note**: Not in F36 withdrawal pool, F52 deposit pool, or F81 ONE2P pool — unique new mule
+- **CWE**: CWE-639 (BOLA), CWE-200 (Information Exposure)
 
 ### F81: ONE2P-LOCAL Live Gateway — KBANK Mule + Player PII in Order API [CONFIRMED - HIGH]
 - **Impact**: New mule KBANK `0858380200` / วทัญญู เพชรดี exposed; player's own KTB 6655379482 appears as `sender` in slip.jvzvavs.space order info API
