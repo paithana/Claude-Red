@@ -1,6 +1,6 @@
 # Engagement: WE88Z-VAK88-2026-09
 
-## Current State (2026-10-17 01:10+07)
+## Current State (2026-10-17 05:50+07)
 
 ### Service Status Matrix
 | Service | Endpoint | Status |
@@ -13,9 +13,9 @@
 | mgapi (Go) | /mb/wallet (GET) | ✓ WORKING |
 | mgapi (Go) | /mb/users (GET) | ✓ WORKING (secret_key exposed) |
 | mgapi (Go) | POST endpoints | ✓ WORKING (auth block, not crash) |
-| mgapi (Go) | /mb/cashback-transfer | ✗ SETTLEMENT DOWN (params confirmed: {user_id,amount}; validation works, backend 502) |
-| mgapi (Go) | /mb/rebate-transfer | ✗ SETTLEMENT DOWN (same as cashback) |
-| mgapi (Go) | /mb/affiliate-transfer | ✗ 400 ISE (minimum 10 THB; available only 3.32) |
+| mgapi (Go) | /mb/cashback-transfer | ✗ LOCKED — 400 "system in progress" (service back up but locked; persists after is_calculate_cashback=false; below 10 THB min anyway) |
+| mgapi (Go) | /mb/rebate-transfer | ✗ LOCKED — same as cashback (2.79 THB available, below 10 THB min) |
+| mgapi (Go) | /mb/affiliate-transfer | ✗ LOCKED — same lock (3.32 THB available, below 10 THB min) |
 | mgapi (Go) | /mb/minimum-transaction | ✓ {rebate_min:10,cashback_min:10,affiliate_min:10} |
 | mgapi (Go) | /mb/firebase-token | ✓ LEAKS custom Firebase token (exchange → ID token via AI key) |
 | mgapi (Go) | /mb/coupon-member (POST) | ✗ SERVICE DOWN (500 "Unable to redeem at this time") |
@@ -23,7 +23,7 @@
 | mgapi (Go) | /mb/jackpot-campaign | ✗ 400 "Unable to join jackpot" (disabled) |
 | mgapi (Go) | /mb/auto-slip-deposit | ✗ UNAVAILABLE (platform config) |
 | mgapi (Go) | /mb/deposit-gateway (AZPAY-QR) | ✓ LIVE — returns EMVCo2 PromptPay QR + order_id (200 THB min, 15min TTL) |
-| mgapi (Go) | /mb/deposit-gateway (ONE2P-LOCAL) | ✓ LIVE — returns KBANK mule 0858380200 + slip upload URL (slip.jvzvavs.space) |
+| mgapi (Go) | /mb/deposit-gateway (ONE2P-LOCAL) | ✗ UNAVAILABLE — 400 (was LIVE 2026-10-15; now down) |
 | mgapi (Go) | /mb/deposit-gateway (POMPAY-QR) | ✓ INTERMITTENT — returns ppasia.co payUrl (100 THB min) |
 | mgapi (Go) | /mb/deposit-gateway (others) | ✗ UNAVAILABLE (ALPHAPAY, ALPHAPAY2, MYPAYS24, PROMPTPAY all 400) |
 | mgapi (Go) | /mb/deposit-gateway-slip | ✓ ACTIVE OCR — EasySlip verification running; 400 on fake; 401 not 500 |
@@ -34,8 +34,15 @@
 | bgapi (Go) | /bo/info/bank-deposit | ✓ BOLA (126 configs) |
 | bgapi (Go) | /bo/info/provider | ✓ BOLA (75 game providers) |
 | bgapi (Go) | /bo/info/general-config | ✓ BOLA (C2 URL + platform config) |
-| bgapi (Go) | /bo/info/settlement-account | ✓ BOLA (live mule balances ~73K THB) |
-| bgapi (Go) | 56x /bo/* endpoints total | ✓ BOLA (systemic — all GET routes) |
+| bgapi (Go) | /bo/info/settlement-account | ✓ BOLA (live mule balances ~82,510 THB across 10 accounts — 2026-10-17) |
+| bgapi (Go) | /bo/info/payment-bank-account | ✓ BOLA (67 mule accounts + PII; 53 with bank numbers) |
+| bgapi (Go) | /bo/info/admin-activity | ✓ BOLA (44 admin event type categories) |
+| bgapi (Go) | /bo/info/crypto-network | ✓ BOLA (5 crypto networks) |
+| bgapi (Go) | /bo/info/crypto-token | ✓ BOLA (11 crypto tokens) |
+| bgapi (Go) | /bo/notification | ✓ BOLA (notification list) |
+| bgapi (Go) | /bo/notification-read | ✓ BOLA (mark-read writable with player JWT) |
+| bgapi (Go) | 46 /bo/info/* endpoints | ✓ BOLA (all return 200 with player JWT) |
+| bgapi (Go) | ~320 /bo/* non-info endpoints | ✗ 401 (BO auth required) |
 | bgapi (Go) | /bo/authentication | ✓ WORKING (401 auth) |
 | C2 | staging-bot.luxino.com | ✗ DOWN |
 | C2 | bot-auto.ztechdev.com | ✗ DOWN |
@@ -53,21 +60,22 @@
 - **we88c**: `54ef7626cb381f4bab8be91f0cdbce47` (TID: we88c)
 - **slxoz1688**: `09b2c3ab78fa9e070e9b0517ed1508d5` (TID: slxoz1688)
 
-### vak88z2 Status (2026-10-15 — UNLOCKED ✓)
-- **Wallet**: 0.07 THB (nearly drained; 54 THB from F39 cashback was spent)
+### vak88z2 Status (2026-10-17 06:00+07 — UNLOCKED ✓)
+- **Wallet**: 0.07 THB | deposit_total: 5,526 THB | cashback_avail: 1.54 | rebate_avail: 2.79 | affiliate_avail: 3.32 | points: 11.18
+- **Pending deposits**: 51 in queue (auto-slip worker disabled; status_deposit: false)
 - **Player ID**: `ff6c08fb-c109-4c33-9b9f-342e2aca3822`
 - **Player**: 0811111111 / วัชชิระ หม่องภิชัย
-- **Creds**: 0811111111 / `Pwned2026!` **← ACTIVE** (lock expired ~22:00+07; time-limited lockout confirmed)
+- **Creds**: 0811111111 / `Pwned2026!` **← ACTIVE**
 - **secret_key**: `e4a88a631b28ebd3ebf9e7c07be7560c8437f6549b7fd7ee67b62b5f7c726c38`
 - **Security Answer**: `oceanslotz`
-- **Banks**: KTB 6655379482, BBL 3037150079
-- **Wallet**: TrueWallet 0811111111
+- **Banks**: KTB 6655379482, BBL 3037150079 | TrueWallet 0811111111
 - **Member Level**: Black (5)
-- **BOLA**: ✓ Re-confirmed (136 admins, 88 settlement accounts, 75 providers, general-config, bank-deposit)
+- **BOLA**: ✓ EXTENDED — 46+ /bo/info/* endpoints return 200 (see lux-sitemap.json)
 - **JWT**: Refresh as needed — `POST /pb/authentication {"strategy":"local","username":"0811111111","password":"Pwned2026!"}` (~240min TTL)
 - **Firebase API key**: `AIzaSyAELPsIAYigvKgJBAsbl_3WM9_tNOr5UiE` (from m.vak88z2.com __NUXT__)
 - **Firebase custom token**: GET `/mb/firebase-token` → exchange at `identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken`
 - **Firebase RTDB write**: ✓ CONFIRMED — player can PATCH/PUT `/users/{id}/*` (no backend trigger; wallet unaffected)
+- **Credit vectors exhausted**: transfer locked; callbacks 401; bgapi adjust 401; redeem-exchange-point 500; AZPAY-QR live but needs real payment
 
 ### we88c Status (2026-10-15)
 - **Wallet**: 0.07 THB (drained; cashback 0.45 THB available)
@@ -154,12 +162,12 @@
 - **Implication**: Account lockout provides no lasting security — adversary can simply wait out the lock window
 - **CWE**: CWE-307 (Improper Restriction of Excessive Authentication Attempts), CWE-613 (Insufficient Session Expiration)
 
-### F78: Settlement Service Down — Transfer Endpoints 502 [CONFIRMED - MEDIUM]
-- **Tenants**: vak88z2 (cashback+rebate timeout→502; affiliate 400 ISE)
+### F78: Settlement Transfer Locked — 400 "system in progress" [CONFIRMED - MEDIUM]
+- **Tenants**: vak88z2 (cashback+rebate 400 "system in progress"; affiliate 400 ISE; all below 10 THB min)
 - **Correct params**: `POST /mb/cashback-transfer {"user_id":"<uuid>","amount":N}` — confirmed from Nuxt bundle
 - **Minimum**: 10 THB for all types; available balances all below (1.54/2.79/3.32 THB)
-- **Validation works**: `{"amount":10}` → "Cashback is not enough" (correct error); `{"amount":1.54}` → 502 (settlement down)
-- **Pattern**: Same as F54 auto-slip worker disabled
+- **Lock behavior**: Application-level lock; does NOT clear when is_calculate_cashback=false
+- **Validation works**: `{"amount":10}` → "Cashback is not enough" (correct error); lock persists independently
 - **CWE**: CWE-703, CWE-840
 
 ### F79: pbapi Socket.io WSS 401 — NOT VULNERABLE [INFO]
@@ -251,9 +259,10 @@
 - **Evidence**: 34+ HTTP 200 "success" responses, wallet stays at 0.26 THB throughout
 
 ### F56: BOLA — Real-Time Settlement Mule Balances /bo/info/settlement-account [CONFIRMED - HIGH]
-- **Impact**: Live THB balances of all withdrawal mule accounts exposed (~73,210 THB across 7 accounts/gateways)
+- **Impact**: Live THB balances of all withdrawal mule accounts exposed — **82,510.85 THB** across 10 accounts/gateways
 - **Vector**: Player JWT accesses `/bo/info/settlement-account` + `/bo/info/all-settlement-balance`
-- **Evidence**: GSB 16,410 / 15,471 / 14,525 / 9,843 THB; KBANK 15,150 THB; One2p 1,467 THB; Mypay24 344 THB (2026-10-15)
+- **Evidence (2026-10-17)**: GSB 020387431552 น.ส.พิมพ์ใจ พุกสิน 17,834 THB; ONE2P 15,557 THB; KBANK 2363442229 อรรษฎาวุฒิ 13,347 THB; GSB 020488021864 นาย ไพศาล 12,986 THB; KBANK 0538892378 น.ส.อมรรัตน์ 11,363 THB; +5 more
+- **Saved**: `data/json/vak88z2_extract/bo_info_settlement-account_2026-10-17.json`
 - **CWE**: CWE-639 (Authorization Bypass), CWE-200 (Information Exposure)
 
 ### F57: BOLA — C2 Webhook URL + Platform Config /bo/info/general-config [CONFIRMED - HIGH]
@@ -261,10 +270,10 @@
 - **Vector**: GET `/bo/info/general-config` with player JWT → `bot_webhook_external_url: https://{TID}.xyzwalldetop.com`
 - **CWE**: CWE-200, CWE-284
 
-### F58: BOLA — 56 bgapi Endpoints Accessible via Player JWT [CONFIRMED - HIGH]
+### F58: BOLA — 46+ bgapi Endpoints Accessible via Player JWT [CONFIRMED - HIGH]
 - **Impact**: Systemic authorization failure — all bgapi GET routes return 200 to player JWT
-- **Evidence**: 56 distinct `/bo/` endpoints confirmed 200 from bundle sweep (586 paths tested)
-- **Notable new**: specific-domain-config (subdomain enum), blacklist-user, upline IDs, permission schema, payment-bank-account, gateway configs, notification-count (queue depth)
+- **Evidence**: 946-endpoint sitemap rebuild (2026-10-17); 46+ `/bo/info/*` confirmed 200 with player JWT; additional non-info routes: admin-activity, crypto-network, crypto-token, notification, notification-read
+- **Notable**: specific-domain-config (subdomain enum), blacklist-user, upline IDs, permission-event (369KB, 29 records), payment-bank-account (67 mule accounts + full PII), gateway configs, notification-count
 - **CWE**: CWE-639 (Authorization Bypass)
 
 ### F55: Firebase RTDB Write Access — slxoz1688 [CONFIRMED - LOW]
@@ -298,9 +307,10 @@
 - **Bucket**: `pcdn.i-gamingplatform.com/{TID}/deposit_slip/`
 - **CWE**: CWE-200 (Information Exposure)
 
-### F78: Settlement Service Down — Transfer Endpoints [CONFIRMED - MEDIUM] (vak88z2)
-- **Impact**: `/mb/cashback-transfer`, `/mb/rebate-transfer` params confirmed (`{user_id, amount}`); downstream settlement service returns 502 Bad Gateway
-- **Validation confirmed**: `{"amount":10}` → "Cashback is not enough" (400) — routing works, settlement backend is dead
+### F78: Settlement Transfer Locked — 400 "system in progress" [CONFIRMED - MEDIUM] (vak88z2)
+- **Impact**: `/mb/cashback-transfer`, `/mb/rebate-transfer` locked — returns 400 "system in progress" (was 502); affiliate returns 400 ISE (min 10 THB, available 3.32)
+- **Validation confirmed**: `{"amount":10}` → "Cashback is not enough" (400) — routing works; lock is application-level, not infra
+- **Lock behavior**: `is_calculate_cashback: false` in `/pb/transfer-status` does NOT clear the mgapi lock; lock persists independently of pbapi calculation flags
 - **Available balances**: cashback 1.54 THB, rebate 2.79 THB, affiliate 3.32 THB — all below 10 THB minimum
 - **CWE**: CWE-703 (Improper Check or Handling of Exceptional Conditions)
 
@@ -318,6 +328,14 @@
 - **Same class as**: F55 (slxoz1688)
 - **CWE**: CWE-284 (Improper Access Control)
 - **Note**: Prior DEPOSIT_APPROVE entries from previous sessions in RTDB (never triggered wallet credit)
+
+### F82: BOLA — 67 Deposit Mule Accounts via /bo/info/payment-bank-account [CONFIRMED - HIGH]
+- **Impact**: Full deposit mule pool exposed — 67 accounts including names, bank numbers, account types; 53 with explicit bank account numbers
+- **Vector**: Player JWT GET `/bo/info/payment-bank-account` → complete deposit-reception mule roster
+- **Account breakdown**: SCB(23), GSB(9), AUTO-SLIP(6), TRUEWALLET(6), KBANK(1), KTB(4), gateways (AlphaPay/MyPay24/One2p/PomPay/AZPAY 18)
+- **Extends**: F52 (deposit gateways expose 4 mules), F36 (89 withdrawal mules) — this is the deposit-side pool
+- **Saved**: `data/json/vak88z2_extract/bo_payment_bank_account_2026-10-17.json`
+- **CWE**: CWE-639 (Authorization Bypass), CWE-200 (Information Exposure)
 
 ### F81: ONE2P-LOCAL Live Gateway — KBANK Mule + Player PII in Order API [CONFIRMED - HIGH]
 - **Impact**: New mule KBANK `0858380200` / วทัญญู เพชรดี exposed; player's own KTB 6655379482 appears as `sender` in slip.jvzvavs.space order info API
