@@ -10,6 +10,7 @@
 | pbapi (FeathersJS) | /pb/latest-withdraw | ✓ DATA LEAK |
 | pbapi (FeathersJS) | /webhook-kbank, /webhook-scb, /webhook-sms | ✓ EXIST (401 — body username/password validation; operator-entered in APK UI, no HTTP auth headers per jadx) |
 | pbapi (FeathersJS) | /webhooks/sms/truewallet | ✓ EXIST (401 auth) |
+| pbapi (FeathersJS) | /webhook/deposit/sms/{kbank,scb,ttb,truewallet} | ✓ EXIST — NEW path from Z Seamless APK; Sign: HMAC-SHA256-base64(body, loginDetails.secretkey); NotAuthenticated without valid appcode+secretkey from C2 |
 | mgapi (Go) | /mb/wallet (GET) | ✓ WORKING |
 | mgapi (Go) | /mb/users (GET) | ✓ WORKING (secret_key exposed) |
 | mgapi (Go) | POST endpoints | ✓ WORKING (auth block, not crash) |
@@ -48,6 +49,7 @@
 | C2 | staging-bot.luxino.com | ✗ DOWN |
 | C2 | bot-auto.ztechdev.com | ✗ DOWN |
 | C2 | {TID}.xyzwalldetop.com | ✓ ALIVE (all paths 404 from non-TH IP; CF proxied; Thai bypass needed) |
+| C2 | jellyfish-app-t2kcf.ondigitalocean.app | ✗ DOWN (530 CF origin error) — Z Seamless SMS interceptor C2 |
 
 ### Active Credentials
 **STORED IN**: `.env.lux` (gitignored) / environment variables at runtime
@@ -381,6 +383,28 @@
 - **QR format (confirmed)**: 59 chars; CRC16/CCITT over first 55 chars → last 4 hex; time HHMMSS at bytes 31-36; TX ref (bank+6digits) at bytes 37-45 (e.g. CTF=KBank, DTF=TTB)
 - **Real TX confirmed**: CTF083665 (KBank) exists in bank DB — "too old" response, not "not found"
 - **CWE**: CWE-200 (Information Exposure), CWE-306 (Missing Authentication)
+
+### F85: Z Seamless SMS Interceptor APK — New C2 + Webhook Architecture [CONFIRMED - HIGH]
+- **Impact**: Second-generation SMS interceptor APK (`superAppV1.0.0.apk`, 57MB) exposes new C2, new webhook paths, and HMAC-SHA256 authentication scheme; new mule banks TTB confirmed
+- **APK**: `gs://luxino-public/AppV2/superAppV1.0.0.apk` (Dart/Flutter, JIT kernel_blob.bin)
+- **Source project**: `dev.nosync/super-app-sms-mgm` by developer "popsan"
+- **New C2**: `https://jellyfish-app-t2kcf.ondigitalocean.app` — DOWN (530 CF error)
+- **New webhook paths** (pbapi, all confirmed ALIVE):
+  - `POST /webhook/deposit/sms/kbank` → 401 (Sign required)
+  - `POST /webhook/deposit/sms/scb` → 401
+  - `POST /webhook/deposit/sms/ttb` → 401
+  - `POST /webhook/deposit/sms/truewallet` → 401
+- **Authentication scheme**:
+  ```
+  Sign: base64(HMAC-SHA256(json_body, loginDetails.secretkey))
+  ```
+  - `loginDetails.secretkey` obtained from C2 `/authentication` with `Config.secretKey = "91E3AE696DB136A4AC49C1BB2B695"` as signing key
+  - Platform validates Sign by looking up `appcode` from body in DB → fetches stored secretkey → verifies
+- **BotRequestModel fields**: `{paymenttypeid, message, appcode, smsuuid, timestamp}`
+- **Config.secretKey** (static, in APK): `91E3AE696DB136A4AC49C1BB2B695` (29 chars)
+- **Blocking factor**: Need valid `appcode` + `loginDetails.secretkey` from C2 (DOWN); platform returns `NotAuthenticated` for all known keys (player secretkey, PAPDIEAW-KEY, Config.secretKey)
+- **Payment types supported**: KBANK, TTB, SCB, PROMPTPAY (from image assets)
+- **CWE**: CWE-798 (Hardcoded Credentials — Config.secretKey), CWE-200 (Information Exposure)
 
 ### F81: ONE2P-LOCAL Live Gateway — KBANK Mule + Player PII in Order API [CONFIRMED - HIGH]
 - **Impact**: New mule KBANK `0858380200` / วทัญญู เพชรดี exposed; player's own KTB 6655379482 appears as `sender` in slip.jvzvavs.space order info API
