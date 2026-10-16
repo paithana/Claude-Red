@@ -49,7 +49,22 @@ You are a reverse engineering specialist. Analyze binaries, firmware, and protoc
   `feasibility:null` (needs manual/dynamic work) — not `false`. Only positive evidence of
   non-exploitability is `false`.
 
-## Tools Integration
+## REA — Primary Tool
+
+**Invoke `/reverse-engineer-anything` skill before any binary/APK/firmware analysis.**
+
+REA provides MCP-native tools for shipped artifacts without spawning GUI tools:
+- `inspect_android_package` — APK decompile (replaces jadx; used for LuxSms APK analysis)
+- `open_binary` + `binary_overview` — native ELF/PE/archive
+- `inspect_managed_artifact` — .NET/CLI assemblies
+- `inspect_firmware_regions` — firmware extraction
+- `analyze_javascript_application` — Electron/ASAR/extracted JS bundles (Nuxt .js chunks)
+- `inspect_web_network_capture` — retained HAR / mitmproxy captures
+- `inspect_binary_layout` — offline ELF layout (pwntools, no disassembler required)
+
+When REA tools are unavailable: `npx -y rea-agents@6.4.0` (if acquisition is in scope).
+
+## Traditional Tools (fallback / complement to REA)
 
 - IDA Pro (via MCP): decompile, rename, set types, xrefs
 - Ghidra: headless analysis, scripting

@@ -42,22 +42,39 @@ Backend: asdgapicenterssdo.com (FeathersJS/Express/MongoDB)
 ### Auth (Platform A)
 - JWT HS256: `{sub: userId, cf: tenantHash, exp, iat}`
 - Tenant isolation via `cf` claim vs API subdomain
-- we88c: `strategy: local` + `phoneNumber`
-- rs24hr: `strategy: local` + `username`
-- Test creds: `0972571110 / Aa112233` (rs24hr: need fresh JWT)
+- pbapi auth: `POST /pb/authentication {"strategy":"local","username":"...","password":"..."}` → `accessToken` (~240min TTL)
+- vak88z2: `0811111111 / Pwned2026!` — player JWT in `.jwt.vak88z2` (re-auth as needed)
+- we88c: `0972571110 / Pwned2026!` — player JWT in `.jwt.we88c`
+- slxoz1688: `0972571110 / Aa112233` — **LOCKED** (check if expired ~13h)
+- rs24hr: `strategy: local` + `username` (need fresh JWT)
 
-### Confirmed Findings (Platform A)
+### Confirmed Findings (Platform A) — 81 total; full details in CLAUDE.md
 | ID | Finding | Severity |
 |----|---------|----------|
-| F01 | Deposit Slip Forgery | CRITICAL |
-| F02 | User 2FA Secret Key Exposure | HIGH |
-| F03 | Cache Flush DoS (`/pb/steavej0b/clearcache` — no auth) | HIGH |
-| F04 | Cross-Tenant OTP Flood | HIGH |
-| F05 | OTP Brute Force (no rate limit) | HIGH |
-| F06 | CORS Wildcard (`*`) | MEDIUM |
-| F23 | Cross-Tenant Deposit Injection (bank_id) | HIGH |
-| F24 | Deposit to Disabled Banks (slip_status=0) | HIGH |
-| F25 | QR Timestamp Manipulation Bypass | CRITICAL |
+| F01 | BOLA /bo/info/admin (136 admins) | HIGH |
+| F02 | NoSQL $where Injection /pb/latest-win (secret_keys) | CRITICAL |
+| F03 | Public Data Leak /pb/latest-withdraw | MEDIUM |
+| F04 | LuxSMS APK Malware Architecture | INFO |
+| F05 | Public GCS Buckets (6 APKs) | HIGH |
+| F06 | HPP Testing Results | INFO |
+| F29 | User secret_key Leak /mb/users (we88c) | HIGH |
+| F30 | Z Seamless GCS Service Account Exposure | MEDIUM |
+| F36 | BOLA /bo/info/assign-settlement-account (89 mules) | CRITICAL |
+| F52 | Deposit Mule Pool Exposure /mb/deposit-gateway | HIGH |
+| F53 | Suspended Mule Accounts Still Assigned | HIGH |
+| F54 | auto-slip-deposit Fake Success / No-Op | MEDIUM |
+| F55 | Firebase RTDB Write — slxoz1688 | LOW |
+| F56 | BOLA Settlement Mule Balances (~73K THB live) | HIGH |
+| F57 | BOLA C2 Webhook URL + Platform Config | HIGH |
+| F58 | BOLA 56 bgapi Endpoints via Player JWT | HIGH |
+| F60 | PAPDIEAW-KEY Hardcoded in Public APK | MEDIUM |
+| F61 | Admin Panel __NUXT__ Config Leak (3 tenants) | HIGH |
+| F62 | Unauthenticated Cache Clear /pb/steavej0b/clearcache | MEDIUM |
+| F63 | Feature Flag Exposure /pb/enable-feature | INFO |
+| F64 | Time-Limited Account Lockout (~13h) | MEDIUM |
+| F78 | Settlement Service Down (502) | MEDIUM |
+| F80 | Firebase RTDB Write — vak88z2 | LOW |
+| F81 | ONE2P-LOCAL Live Gateway — KBANK Mule + PII | HIGH |
 
 ### Platform A Scripts
 | Script | Purpose |
