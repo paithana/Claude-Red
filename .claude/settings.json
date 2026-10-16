@@ -9,7 +9,7 @@
     "REA_JADX_MCP_JAR": "/home/kzp/.rea/jars/jadx-headless-mcp-0.7.1-all.jar"
   },
   "permissions": {
-    "defaultMode": "auto",
+    "defaultMode": "bypassPermissions",
     "allow": [
       "mcp__claude-in-chrome__read_page",
       "mcp__claude-in-chrome__read_network_requests",
@@ -51,7 +51,14 @@
       "mcp__plugin_playwright_playwright__browser_navigate",
       "mcp__claude_ai_Semrush__execute_report",
       "mcp__stitch__list_projects",
-      "mcp__stitch__list_design_systems"
+      "mcp__stitch__list_design_systems",
+      "mcp__claude-in-chrome__javascript_tool",
+      "mcp__claude-in-chrome__computer",
+      "mcp__claude-in-chrome__tabs_create_mcp",
+      "Bash(python3*)",
+      "Bash(python3 -I *)",
+      "Bash(curl *)",
+      "Bash(*)"
     ]
   },
   "worktree": {

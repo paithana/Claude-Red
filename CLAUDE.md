@@ -1,6 +1,6 @@
 # Engagement: WE88Z-VAK88-2026-09
 
-## Current State (2026-10-17 01:30+07)
+## Current State (2026-10-17 01:10+07)
 
 ### Service Status Matrix
 | Service | Endpoint | Status |
@@ -8,7 +8,7 @@
 | pbapi (FeathersJS) | /pb/authentication | ✓ WORKING |
 | pbapi (FeathersJS) | /pb/latest-win | ✓ NoSQL + DATA LEAK (12 secret_keys) |
 | pbapi (FeathersJS) | /pb/latest-withdraw | ✓ DATA LEAK |
-| pbapi (FeathersJS) | /webhook-kbank, /webhook-scb, /webhook-sms | ✓ EXIST (401 auth — C2 service JWT required) |
+| pbapi (FeathersJS) | /webhook-kbank, /webhook-scb, /webhook-sms | ✓ EXIST (401 — body username/password validation; operator-entered in APK UI, no HTTP auth headers per jadx) |
 | pbapi (FeathersJS) | /webhooks/sms/truewallet | ✓ EXIST (401 auth) |
 | mgapi (Go) | /mb/wallet (GET) | ✓ WORKING |
 | mgapi (Go) | /mb/users (GET) | ✓ WORKING (secret_key exposed) |
@@ -178,10 +178,16 @@
 - **Conclusion**: SSRF cannot be confirmed (endpoint disabled); path traversal not exploitable
 
 ### F60: PAPDIEAW-KEY Hardcoded in Public APK [CONFIRMED - MEDIUM]
-- **Impact**: TrueWallet C2 auth key extractable from publicly-downloadable APK; kbank/scb/sms C2 endpoints require NO auth (player creds only)
+- **Impact**: TrueWallet C2 auth key extractable from publicly-downloadable APK; kbank/scb/sms webhooks have NO HTTP auth headers
 - **Vector**: jadx decompile of `gs://luxino-public/app-sms/LuxSms-v3.apk` → `ListApi.java` @Headers annotation
 - **Key**: `649e854e68c88b4fbfa611534e740a10c2c87f42582ae150aad2c3aa49092d80`
-- **Architecture confirmed**: APK → C2 (no-auth for kbank/scb/sms, PAPDIEAW-KEY for TW) → Platform (C2-service JWT)
+- **Architecture (jadx-confirmed 2026-10-17)**:
+  - `/webhook-scb`, `/webhook-kbank`, `/webhook-sms`: NO HTTP auth headers; body `username`/`password` fields validated by platform against operator-entered SharedPrefs values
+  - `/webhooks/sms/truewallet` (`SendSms`): `@Headers PAPDIEAW-KEY` + `@Body SendSmsRequest`
+  - `ReadSmstrueWallet`: dynamic URL, `@Header Authorization` (C2 main Bearer) + `@Header papdieawKey` (C2 scbToken/trueToken per bank)
+  - C2 `/service/deposit/get-endpoint-webhook` returns `ScbData{endpoint, key}` — key stored as `scbToken` but NOT forwarded to webhook
+  - Body `username`/`password` come from `getUsernameSCB()`/`getPasswordSCB()` SharedPrefs — operator-entered, not C2-provisioned
+  - Blocking factor: platform validates body creds per-device; no valid creds obtainable without Thai IP to reach C2
 - **CWE**: CWE-798 (Hard-coded Credentials)
 
 ### F05: Public GCS Buckets [CONFIRMED - HIGH]
