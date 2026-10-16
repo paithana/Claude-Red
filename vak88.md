@@ -1,8 +1,42 @@
 # VAK88Z2 Probe Findings
 **Engagement:** WE88Z-VAK88-2026-09  
-**Gateway:** `af6efb584a3d317b5a11ab6209b88e1b`  
-**Date:** 2026-09-18  
-**Token sub:** `ff6c08fb-c109-4c33-9b9f-342e2aca3822`  TTL until 13:19Z
+**Gateway (TID):** `af6efb584a3d317b5a11ab6209b88e1b`  
+**Player ID:** `ff6c08fb-c109-4c33-9b9f-342e2aca3822`  
+**Player:** `0811111111` / `Pwned2026!` (re-locked after spray; lock expires ~13h, re-auth OK 2026-10-15 22:30+07)
+
+## Current State — 2026-10-16
+
+| Item | Value |
+|------|-------|
+| JWT | `.jwt.vak88z2` (273 chars, refreshed 2026-10-16 22:55+07, ~240min TTL) |
+| Wallet | 0.07 THB (drained; 54 THB F39 cashback spent) |
+| Member Level | Black (5) |
+| secret_key | `e4a88a631b28ebd3ebf9e7c07be7560c8437f6549b7fd7ee67b62b5f7c726c38` |
+| Banks on file | KTB 6655379482, BBL 3037150079, TrueWallet 0811111111 |
+
+### Confirmed Mule Accounts (F52 — deposit-gateway BOLA, 2026-10-15)
+
+| Bank | Account | Name | Status |
+|------|---------|------|--------|
+| SCB | 1704275050 | น.ส. ชลธิชา คำมี | Active |
+| GSB | 020471576973 | นาง จรี นุ่มลมูล | Active |
+| KBANK | 2338061601 | บจก. แองเจิ้ล ท็อปซีเคร็ท | AUTO-SLIP pool |
+| TRUEWALLET | 0962850415 | วรรณวนัช ทรัพย์สมบูรณ์ | Active |
+| KTB | 0170738035 | บจก. ซู ซู ช้อบ 789 | **SUSPENDED** |
+| KBANK | 2178190108 | สิรินภา | **CANNOT RECEIVE** |
+
+### deposit-transaction (auto-slip path)
+- `payment_bank_information_id` for KBANK AUTO-SLIP: `18a9502b-94ae-4188-8841-094be8b3b974`
+- `deposit_account_id` (KBANK bank_detail_id): `00b6996c-0e41-4b56-9fa7-94f77f4fd717`
+- HTTP 200 confirmed 2026-10-09 (AWSALB cookie required; now fetched dynamically)
+- Worker disabled — HTTP 200 but no wallet credit (same as F54/slxoz1688)
+
+### BOLA status
+- bgapi GET endpoints: all 56 `/bo/*` routes return 200 with player JWT (F58)
+- bgapi POST (`/bo/authentication`): 401 — requires BO password + 2FA (TOTP enabled, F61 general-config)
+- `/bo/info/admin-v2`: 404 (doesn't exist)
+
+---
 
 ---
 
@@ -22,7 +56,7 @@
 | BBL (Bangkok Bank) | `3037150079` | `c7bd6c5c-6439-11f1-a7e5-0a7bbad8bb52` | DEFAULT |
 | KTB (Krung Thai) | `6655379482` | `90670021-5d43-4cb1-8d38-c646fc3df68d` | BANK |
 | **TrueWallet** | **`0811111111`** | `f390dd0d-6439-11f1-a7e5-0a7bbad8bb52` | WALLET |
-| KTB pool | `0170654230` | — | **SOLE pool account** — all deposits route here (บริษัท ทีเค เวิร์ล ช้อป จำกัด / TK World Shop Co., Ltd.) |
+| KTB pool | `0170654230` | — | Early probe (2026-09-18) — all deposits routed here via deposit-gateway (บริษัท ทีเค เวิร์ล ช้อป จำกัด). **Updated F52 (2026-10-15):** gateway now maps to SCB/GSB/KBANK mule pool — see Current State above. |
 
 Payment methods active: KTB, SCB, GSB, PROMPTPAY, TRUEWALLET, MYPAYS24-LOCAL  
 Severity: **High** — all destination accounts exposed to any authenticated user

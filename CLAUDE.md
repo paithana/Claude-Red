@@ -1,6 +1,6 @@
 # Engagement: WE88Z-VAK88-2026-09
 
-## Current State (2026-10-15 22:30+07)
+## Current State (2026-10-17 01:30+07)
 
 ### Service Status Matrix
 | Service | Endpoint | Status |
@@ -13,8 +13,21 @@
 | mgapi (Go) | /mb/wallet (GET) | ✓ WORKING |
 | mgapi (Go) | /mb/users (GET) | ✓ WORKING (secret_key exposed) |
 | mgapi (Go) | POST endpoints | ✓ WORKING (auth block, not crash) |
+| mgapi (Go) | /mb/cashback-transfer | ✗ SETTLEMENT DOWN (params confirmed: {user_id,amount}; validation works, backend 502) |
+| mgapi (Go) | /mb/rebate-transfer | ✗ SETTLEMENT DOWN (same as cashback) |
+| mgapi (Go) | /mb/affiliate-transfer | ✗ 400 ISE (minimum 10 THB; available only 3.32) |
+| mgapi (Go) | /mb/minimum-transaction | ✓ {rebate_min:10,cashback_min:10,affiliate_min:10} |
+| mgapi (Go) | /mb/firebase-token | ✓ LEAKS custom Firebase token (exchange → ID token via AI key) |
+| mgapi (Go) | /mb/coupon-member (POST) | ✗ SERVICE DOWN (500 "Unable to redeem at this time") |
+| mgapi (Go) | /mb/quest-daily-check-in | ✗ 400 "Incorrect Information" (feature not configured; quest-information returns []) |
+| mgapi (Go) | /mb/jackpot-campaign | ✗ 400 "Unable to join jackpot" (disabled) |
 | mgapi (Go) | /mb/auto-slip-deposit | ✗ UNAVAILABLE (platform config) |
-| mgapi (Go) | /mb/deposit-gateway | ✗ UNAVAILABLE (server config) |
+| mgapi (Go) | /mb/deposit-gateway (AZPAY-QR) | ✓ LIVE — returns EMVCo2 PromptPay QR + order_id (200 THB min, 15min TTL) |
+| mgapi (Go) | /mb/deposit-gateway (ONE2P-LOCAL) | ✓ LIVE — returns KBANK mule 0858380200 + slip upload URL (slip.jvzvavs.space) |
+| mgapi (Go) | /mb/deposit-gateway (POMPAY-QR) | ✓ INTERMITTENT — returns ppasia.co payUrl (100 THB min) |
+| mgapi (Go) | /mb/deposit-gateway (others) | ✗ UNAVAILABLE (ALPHAPAY, ALPHAPAY2, MYPAYS24, PROMPTPAY all 400) |
+| mgapi (Go) | /mb/deposit-gateway-slip | ✓ ACTIVE OCR — EasySlip verification running; 400 on fake; 401 not 500 |
+| mgapi (Go) | /mb/azpay/callback, /mb/pompay/callback, /mb/one2p/callback | ✓ EXIST (401 — gateway-issued Bearer JWT required; not player JWT, not C2 JWT) |
 | mgapi (Go) | /mb/sign-url-upload-slip | ✓ WORKING (GCS signed URL) |
 | bgapi (Go) | /bo/info/admin (BOLA) | ✓ WORKING (136 admins) |
 | bgapi (Go) | /bo/info/assign-settlement-account | ✓ BOLA (89 withdrawal mules) |
@@ -51,7 +64,10 @@
 - **Wallet**: TrueWallet 0811111111
 - **Member Level**: Black (5)
 - **BOLA**: ✓ Re-confirmed (136 admins, 88 settlement accounts, 75 providers, general-config, bank-deposit)
-- **JWT**: Fresh `.jwt.vak88z2` saved 2026-10-15 22:30+07 (273 chars, ~240min TTL)
+- **JWT**: Refresh as needed — `POST /pb/authentication {"strategy":"local","username":"0811111111","password":"Pwned2026!"}` (~240min TTL)
+- **Firebase API key**: `AIzaSyAELPsIAYigvKgJBAsbl_3WM9_tNOr5UiE` (from m.vak88z2.com __NUXT__)
+- **Firebase custom token**: GET `/mb/firebase-token` → exchange at `identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken`
+- **Firebase RTDB write**: ✓ CONFIRMED — player can PATCH/PUT `/users/{id}/*` (no backend trigger; wallet unaffected)
 
 ### we88c Status (2026-10-15)
 - **Wallet**: 0.07 THB (drained; cashback 0.45 THB available)
@@ -137,6 +153,18 @@
 - **BOLA re-confirmed**: All 6 bgapi endpoints return 200 with fresh JWT (136 admins, 88 settlement accounts)
 - **Implication**: Account lockout provides no lasting security — adversary can simply wait out the lock window
 - **CWE**: CWE-307 (Improper Restriction of Excessive Authentication Attempts), CWE-613 (Insufficient Session Expiration)
+
+### F78: Settlement Service Down — Transfer Endpoints 502 [CONFIRMED - MEDIUM]
+- **Tenants**: vak88z2 (cashback+rebate timeout→502; affiliate 400 ISE)
+- **Correct params**: `POST /mb/cashback-transfer {"user_id":"<uuid>","amount":N}` — confirmed from Nuxt bundle
+- **Minimum**: 10 THB for all types; available balances all below (1.54/2.79/3.32 THB)
+- **Validation works**: `{"amount":10}` → "Cashback is not enough" (correct error); `{"amount":1.54}` → 502 (settlement down)
+- **Pattern**: Same as F54 auto-slip worker disabled
+- **CWE**: CWE-703, CWE-840
+
+### F79: pbapi Socket.io WSS 401 — NOT VULNERABLE [INFO]
+- All WS upgrade attempts return 401; JWT in header causes 404 (CF routing anomaly)
+- No unauthenticated FeathersJS service PATCH possible via socket.io
 
 ### F65: Prototype Pollution — NOT VULNERABLE [INFO]
 - **Test**: `__proto__` and `constructor.prototype` in FeathersJS `/pb/authentication` body
@@ -263,6 +291,36 @@
 - **Evidence**: `z-seamless-service-account@z-seamless.iam.gserviceaccount.com`
 - **Bucket**: `pcdn.i-gamingplatform.com/{TID}/deposit_slip/`
 - **CWE**: CWE-200 (Information Exposure)
+
+### F78: Settlement Service Down — Transfer Endpoints [CONFIRMED - MEDIUM] (vak88z2)
+- **Impact**: `/mb/cashback-transfer`, `/mb/rebate-transfer` params confirmed (`{user_id, amount}`); downstream settlement service returns 502 Bad Gateway
+- **Validation confirmed**: `{"amount":10}` → "Cashback is not enough" (400) — routing works, settlement backend is dead
+- **Available balances**: cashback 1.54 THB, rebate 2.79 THB, affiliate 3.32 THB — all below 10 THB minimum
+- **CWE**: CWE-703 (Improper Check or Handling of Exceptional Conditions)
+
+### F79: pbapi Socket.io WSS 401 [INFO] (vak88z2)
+- **Test**: socket.io connection attempts (no token, `?token=JWT`, `?accessToken=JWT`)
+- **Result**: 401 for all; CF routing causes 404 when Authorization header used in Upgrade request
+- **Conclusion**: WSS not accessible to player JWT
+
+### F80: Firebase RTDB Write Access — vak88z2 [CONFIRMED - LOW]
+- **Impact**: Player can write arbitrary data to own `/users/{id}` node — frontend display manipulation only
+- **Vector 1**: GET `/mb/firebase-token` → Firebase custom token → exchange via `identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=AIzaSyAELPsIAYigvKgJBAsbl_3WM9_tNOr5UiE`
+- **Vector 2**: Firebase API key from m.vak88z2.com __NUXT__: `AIzaSyAELPsIAYigvKgJBAsbl_3WM9_tNOr5UiE`
+- **Evidence**: PUT/PATCH to `vak88z-default-rtdb.asia-southeast1.firebasedatabase.app/users/{player_id}/*` returns HTTP 200
+- **Limit**: No backend trigger; wallet balance unaffected; cross-user BOLA blocked (root returns 401)
+- **Same class as**: F55 (slxoz1688)
+- **CWE**: CWE-284 (Improper Access Control)
+- **Note**: Prior DEPOSIT_APPROVE entries from previous sessions in RTDB (never triggered wallet credit)
+
+### F81: ONE2P-LOCAL Live Gateway — KBANK Mule + Player PII in Order API [CONFIRMED - HIGH]
+- **Impact**: New mule KBANK `0858380200` / วทัญญู เพชรดี exposed; player's own KTB 6655379482 appears as `sender` in slip.jvzvavs.space order info API
+- **Vector**: POST `/mb/deposit-gateway` with payment_bank_information_id `ac99fb0e-0ce2-46eb-9bde-348243721157` → 200 with mule account + slip URL
+- **Slip service**: `slip.jvzvavs.space/api/customergw/p2p-public/upload-info/{order_id}?t={token}` — leaks full order with sender+receiver PII
+- **Upload endpoint**: POST `/api/customergw/p2p-public/upload-slip/{order_id}?t={token}` (field: `slip`)
+- **mgapi mirror**: POST `/mb/deposit-gateway-slip` + order_id → EasySlip OCR active, 400 on fake slip
+- **All gateway callbacks**: `/mb/{azpay,pompay,one2p}/callback` — 401 (gateway JWT required; not breakable without API key)
+- **CWE**: CWE-639 (BOLA), CWE-200 (PII exposure)
 
 ## Infrastructure
 
@@ -394,6 +452,7 @@ Details: See `.env.lux` for account numbers, names, and payment methods
 - `reports/WE88Z-VAK88-2026-10-06-DRAFT.md` - Pentest report draft
 - `.jwt.vak88z2` - Player JWT
 - `/tmp/vak88z2_urls.txt` - 108 extracted URLs
+- `lux-sitemap.json` - **Full API sitemap** — 108 endpoints across pbapi/mgapi/bgapi/Firebase/GCS/ONE2P; finding refs (F01–F81), auth types, status codes; generated 2026-10-17
 
 ---
 

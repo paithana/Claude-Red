@@ -1,0 +1,987 @@
+{
+  "generated": "2026-10-17",
+  "engagement": "WE88Z-VAK88-2026-09",
+  "tenants": {
+    "vak88z2": "af6efb584a3d317b5a11ab6209b88e1b",
+    "we88c": "54ef7626cb381f4bab8be91f0cdbce47",
+    "slxoz1688": "09b2c3ab78fa9e070e9b0517ed1508d5"
+  },
+  "hosts": {
+    "pbapi": "{TID}pbapi.asdgapicenterssdo.com",
+    "mgapi": "{TID}mgapi.asdgapicenterssdo.com",
+    "bgapi": "{TID}bgapi.asdgapicenterssdo.com",
+    "bff": "{TID}api.asdgapicenterssdo.com",
+    "player_site": "m.vak88z2.com",
+    "manage_panel": "manage.{tenant}.com",
+    "c2": "{TID}.xyzwalldetop.com",
+    "slip_upload": "slip.jvzvavs.space",
+    "pompay": "ppasia.co"
+  },
+  "endpoints": [
+    {
+      "host": "pbapi",
+      "method": "POST",
+      "path": "/pb/authentication",
+      "auth": "none",
+      "status": 200,
+      "finding": "",
+      "notes": "strategy:local; returns accessToken (~240min)"
+    },
+    {
+      "host": "pbapi",
+      "method": "GET",
+      "path": "/pb/latest-win",
+      "auth": "none",
+      "status": 200,
+      "finding": "F02",
+      "notes": "NoSQL  injection — 22 secret_keys extracted"
+    },
+    {
+      "host": "pbapi",
+      "method": "GET",
+      "path": "/pb/latest-withdraw",
+      "auth": "none",
+      "status": 200,
+      "finding": "F03",
+      "notes": "Public data leak — withdrawal records no auth"
+    },
+    {
+      "host": "pbapi",
+      "method": "POST",
+      "path": "/pb/authentication",
+      "auth": "none",
+      "status": 200,
+      "finding": "",
+      "notes": ""
+    },
+    {
+      "host": "pbapi",
+      "method": "GET",
+      "path": "/pb/custom-function",
+      "auth": "none",
+      "status": 200,
+      "finding": "",
+      "notes": "Platform config; page_show_list=index"
+    },
+    {
+      "host": "pbapi",
+      "method": "GET",
+      "path": "/pb/notification-modal",
+      "auth": "none",
+      "status": 200,
+      "finding": "",
+      "notes": "Telegram+Line links"
+    },
+    {
+      "host": "pbapi",
+      "method": "GET",
+      "path": "/pb/domain-page-config/deposit",
+      "auth": "none",
+      "status": 200,
+      "finding": "",
+      "notes": "GCS bucket vak88"
+    },
+    {
+      "host": "pbapi",
+      "method": "GET",
+      "path": "/pb/language",
+      "auth": "none",
+      "status": 200,
+      "finding": ""
+    },
+    {
+      "host": "pbapi",
+      "method": "GET",
+      "path": "/pb/currency",
+      "auth": "none",
+      "status": 200,
+      "finding": ""
+    },
+    {
+      "host": "pbapi",
+      "method": "GET",
+      "path": "/pb/payment-type",
+      "auth": "none",
+      "status": 200,
+      "finding": ""
+    },
+    {
+      "host": "pbapi",
+      "method": "GET",
+      "path": "/pb/enable-feature",
+      "auth": "none",
+      "status": 200,
+      "finding": "F63",
+      "notes": "Returns rebate/cashback/affiliate/point flags; no auth; all 3 tenants"
+    },
+    {
+      "host": "pbapi",
+      "method": "GET",
+      "path": "/pb/steavej0b/clearcache",
+      "auth": "none",
+      "status": 200,
+      "finding": "F62",
+      "notes": "Unauthenticated cache clear; all 3 tenants"
+    },
+    {
+      "host": "pbapi",
+      "method": "POST",
+      "path": "/pb/steavej0b/clearcache",
+      "auth": "none",
+      "status": 200,
+      "finding": "F62"
+    },
+    {
+      "host": "pbapi",
+      "method": "GET",
+      "path": "/webhook-kbank",
+      "auth": "c2",
+      "status": 401,
+      "finding": "F04",
+      "notes": "C2 service JWT required"
+    },
+    {
+      "host": "pbapi",
+      "method": "POST",
+      "path": "/webhook-kbank",
+      "auth": "c2",
+      "status": 401,
+      "finding": "F04"
+    },
+    {
+      "host": "pbapi",
+      "method": "POST",
+      "path": "/webhook-scb",
+      "auth": "c2/none",
+      "status": 401,
+      "finding": "F04"
+    },
+    {
+      "host": "pbapi",
+      "method": "POST",
+      "path": "/webhook-sms",
+      "auth": "c2/none",
+      "status": 401,
+      "finding": "F04"
+    },
+    {
+      "host": "pbapi",
+      "method": "POST",
+      "path": "/webhooks/sms/truewallet",
+      "auth": "papdieaw",
+      "status": 401,
+      "finding": "F04"
+    },
+    {
+      "host": "mgapi",
+      "method": "GET",
+      "path": "/mb/wallet",
+      "auth": "player_jwt",
+      "status": 200,
+      "finding": ""
+    },
+    {
+      "host": "mgapi",
+      "method": "GET",
+      "path": "/mb/users",
+      "auth": "player_jwt",
+      "status": 200,
+      "finding": "F29",
+      "notes": "secret_key exposed — we88c/slxoz1688"
+    },
+    {
+      "host": "mgapi",
+      "method": "GET",
+      "path": "/mb/payment-type",
+      "auth": "player_jwt",
+      "status": 200,
+      "finding": "F52",
+      "notes": "include=true shows bank_detail IDs; deposit mule routing"
+    },
+    {
+      "host": "mgapi",
+      "method": "GET",
+      "path": "/mb/bank",
+      "auth": "player_jwt",
+      "status": 200,
+      "finding": ""
+    },
+    {
+      "host": "mgapi",
+      "method": "GET",
+      "path": "/mb/promotion",
+      "auth": "player_jwt",
+      "status": 200,
+      "finding": ""
+    },
+    {
+      "host": "mgapi",
+      "method": "GET",
+      "path": "/mb/cashback",
+      "auth": "player_jwt",
+      "status": 200,
+      "finding": ""
+    },
+    {
+      "host": "mgapi",
+      "method": "GET",
+      "path": "/mb/rebate",
+      "auth": "player_jwt",
+      "status": 200,
+      "finding": ""
+    },
+    {
+      "host": "mgapi",
+      "method": "GET",
+      "path": "/mb/point",
+      "auth": "player_jwt",
+      "status": 200,
+      "finding": ""
+    },
+    {
+      "host": "mgapi",
+      "method": "GET",
+      "path": "/mb/game",
+      "auth": "player_jwt",
+      "status": 200,
+      "finding": ""
+    },
+    {
+      "host": "mgapi",
+      "method": "GET",
+      "path": "/mb/provider",
+      "auth": "player_jwt",
+      "status": 200,
+      "finding": ""
+    },
+    {
+      "host": "mgapi",
+      "method": "GET",
+      "path": "/mb/notification",
+      "auth": "player_jwt",
+      "status": 200,
+      "finding": ""
+    },
+    {
+      "host": "mgapi",
+      "method": "GET",
+      "path": "/mb/deposit-transaction",
+      "auth": "player_jwt",
+      "status": 400,
+      "finding": "F54",
+      "notes": "400 ISE on vak88z2"
+    },
+    {
+      "host": "mgapi",
+      "method": "POST",
+      "path": "/mb/deposit-transaction",
+      "auth": "player_jwt",
+      "status": 200,
+      "finding": "F54",
+      "notes": "AWSALB cookie required; HTTP 200 but no credit (worker disabled)"
+    },
+    {
+      "host": "mgapi",
+      "method": "GET",
+      "path": "/mb/withdraw-transaction",
+      "auth": "player_jwt",
+      "status": 200,
+      "finding": ""
+    },
+    {
+      "host": "mgapi",
+      "method": "GET",
+      "path": "/mb/payment-slip-information",
+      "auth": "player_jwt",
+      "status": 200,
+      "finding": ""
+    },
+    {
+      "host": "mgapi",
+      "method": "GET",
+      "path": "/mb/affiliate",
+      "auth": "player_jwt",
+      "status": 200,
+      "finding": ""
+    },
+    {
+      "host": "mgapi",
+      "method": "GET",
+      "path": "/mb/member-level",
+      "auth": "player_jwt",
+      "status": 200,
+      "finding": ""
+    },
+    {
+      "host": "mgapi",
+      "method": "GET",
+      "path": "/mb/minimum-transaction",
+      "auth": "player_jwt",
+      "status": 200,
+      "finding": "F78",
+      "notes": "rebate_min:10,cashback_min:10,affiliate_min:10"
+    },
+    {
+      "host": "mgapi",
+      "method": "GET",
+      "path": "/mb/firebase-token",
+      "auth": "player_jwt",
+      "status": 200,
+      "finding": "F80",
+      "notes": "Leaks custom Firebase token → exchange for ID token"
+    },
+    {
+      "host": "mgapi",
+      "method": "POST",
+      "path": "/mb/cashback-transfer",
+      "auth": "player_jwt",
+      "status": 502,
+      "finding": "F78",
+      "notes": "Settlement service down; params: {user_id,amount}"
+    },
+    {
+      "host": "mgapi",
+      "method": "POST",
+      "path": "/mb/rebate-transfer",
+      "auth": "player_jwt",
+      "status": 502,
+      "finding": "F78"
+    },
+    {
+      "host": "mgapi",
+      "method": "POST",
+      "path": "/mb/affiliate-transfer",
+      "auth": "player_jwt",
+      "status": 400,
+      "finding": "F78",
+      "notes": "400 ISE; minimum 10 THB"
+    },
+    {
+      "host": "mgapi",
+      "method": "POST",
+      "path": "/mb/coupon-member",
+      "auth": "player_jwt",
+      "status": 500,
+      "finding": "",
+      "notes": "Service down"
+    },
+    {
+      "host": "mgapi",
+      "method": "GET",
+      "path": "/mb/quest-daily-check-in",
+      "auth": "player_jwt",
+      "status": 400,
+      "finding": "",
+      "notes": "Feature not configured"
+    },
+    {
+      "host": "mgapi",
+      "method": "POST",
+      "path": "/mb/quest-daily-check-in",
+      "auth": "player_jwt",
+      "status": 400,
+      "finding": ""
+    },
+    {
+      "host": "mgapi",
+      "method": "POST",
+      "path": "/mb/jackpot-campaign",
+      "auth": "player_jwt",
+      "status": 400,
+      "finding": "",
+      "notes": "Disabled"
+    },
+    {
+      "host": "mgapi",
+      "method": "POST",
+      "path": "/mb/auto-slip-deposit",
+      "auth": "player_jwt",
+      "status": 200,
+      "finding": "F54",
+      "notes": "HTTP 200 fake success; no wallet credit; worker disabled"
+    },
+    {
+      "host": "mgapi",
+      "method": "POST",
+      "path": "/mb/auto-slip-deposit/check",
+      "auth": "player_jwt",
+      "status": 200,
+      "finding": "F54"
+    },
+    {
+      "host": "mgapi",
+      "method": "POST",
+      "path": "/mb/upload-slip",
+      "auth": "player_jwt",
+      "status": 200,
+      "finding": "F54",
+      "notes": "Dedup active: re-submit → already been used"
+    },
+    {
+      "host": "mgapi",
+      "method": "POST",
+      "path": "/mb/match-slip",
+      "auth": "player_jwt",
+      "status": 400,
+      "finding": "F54",
+      "notes": "Real JPEG → CF-403; synthetic → 400 ISE"
+    },
+    {
+      "host": "mgapi",
+      "method": "POST",
+      "path": "/mb/sign-url-upload-slip",
+      "auth": "player_jwt",
+      "status": 200,
+      "finding": "F30",
+      "notes": "GCS signed URL; z-seamless-service-account exposed"
+    },
+    {
+      "host": "mgapi",
+      "method": "POST",
+      "path": "/mb/deposit-gateway",
+      "auth": "player_jwt",
+      "status": 200,
+      "finding": "F52",
+      "notes": "AZPAY-QR/ONE2P-LOCAL/POMPAY-QR live; exposes mule accounts"
+    },
+    {
+      "host": "mgapi",
+      "method": "PATCH",
+      "path": "/mb/deposit-gateway/{order_id}",
+      "auth": "player_jwt",
+      "status": 200,
+      "finding": "",
+      "notes": "Mass-assignment tested; extra fields silently ignored"
+    },
+    {
+      "host": "mgapi",
+      "method": "POST",
+      "path": "/mb/deposit-gateway-slip",
+      "auth": "player_jwt",
+      "status": 400,
+      "finding": "F81",
+      "notes": "EasySlip OCR active; 400 on fake slip"
+    },
+    {
+      "host": "mgapi",
+      "method": "POST",
+      "path": "/mb/deposit-gateway-pending",
+      "auth": "player_jwt",
+      "status": 200,
+      "finding": ""
+    },
+    {
+      "host": "mgapi",
+      "method": "POST",
+      "path": "/mb/deposit-alphapay",
+      "auth": "player_jwt",
+      "status": 404,
+      "finding": "",
+      "notes": "404 — endpoint does not exist on this version"
+    },
+    {
+      "host": "mgapi",
+      "method": "POST",
+      "path": "/mb/deposit-gateway (AUTOSLIP)",
+      "auth": "player_jwt",
+      "status": 500,
+      "finding": "",
+      "notes": "500 unavailable — we88c/slxoz1688"
+    },
+    {
+      "host": "mgapi",
+      "method": "POST",
+      "path": "/mb/azpay/callback",
+      "auth": "gateway_jwt",
+      "status": 401,
+      "finding": "F81",
+      "notes": "Gateway JWT required; not player JWT"
+    },
+    {
+      "host": "mgapi",
+      "method": "POST",
+      "path": "/mb/pompay/callback",
+      "auth": "gateway_jwt",
+      "status": 401,
+      "finding": "F81"
+    },
+    {
+      "host": "mgapi",
+      "method": "POST",
+      "path": "/mb/one2p/callback",
+      "auth": "gateway_jwt",
+      "status": 401,
+      "finding": "F81"
+    },
+    {
+      "host": "mgapi",
+      "method": "GET",
+      "path": "/mb/deposit-gateway/{order_id}",
+      "auth": "player_jwt",
+      "status": 400,
+      "finding": "",
+      "notes": "Does not return order info (access-controlled)"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/authentication",
+      "auth": "bo_creds",
+      "status": 401,
+      "finding": "",
+      "notes": "2FA (TOTP) enabled"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/info/admin",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F01",
+      "notes": "BOLA — 136 admins"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/info/assign-settlement-account",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F36",
+      "notes": "BOLA — 89 mule accounts with PII"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/info/bank-deposit",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F58",
+      "notes": "BOLA — 126 bank deposit configs"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/info/provider",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F58",
+      "notes": "BOLA — 75 game providers"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/info/general-config",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F57",
+      "notes": "BOLA — C2 webhook URL + 2FA status"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/info/settlement-account",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F56",
+      "notes": "BOLA — live mule balances ~73K THB"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/info/all-settlement-balance",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F56"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/info/payment-bank-account",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F58",
+      "notes": "BOLA — 67 entries; 53 real mule accounts"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/info/payment-type",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F58",
+      "notes": "BOLA — 126 gateway type definitions"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/info/blacklist-user",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F58"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/info/permission",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F58"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/info/role",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F58"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/info/upline",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F58"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/info/affiliate",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F58"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/info/affiliate-member",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F58"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/info/specific-domain-config",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F58",
+      "notes": "Subdomain enum"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/info/bank",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F58"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/info/member",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F58"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/info/member-level",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F58"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/info/promotion",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F58"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/info/promotion-history",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F58"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/info/sms-config",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F58"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/info/withdraw-config",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F58"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/info/auto-withdraw",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F58"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/info/cashback-config",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F58"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/info/rebate-config",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F58"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/info/line-config",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F58"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/info/domain-config",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F58"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/info/point-config",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F58"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/info/game",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F58"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/info/game-category",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F58"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/info/gateway-config",
+      "auth": "player_jwt_bola",
+      "status": 404,
+      "finding": "",
+      "notes": "404 — does not exist"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/notification-count",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F58",
+      "notes": "Queue depth"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/slip-deposit-task",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F58"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/withdraw-task",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F58"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/transaction-deposit",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F58"
+    },
+    {
+      "host": "bgapi",
+      "method": "GET",
+      "path": "/bo/transaction-withdraw",
+      "auth": "player_jwt_bola",
+      "status": 200,
+      "finding": "F58"
+    },
+    {
+      "host": "firebase_rtdb",
+      "method": "GET",
+      "path": "/users/{player_id}.json",
+      "auth": "firebase_id_token",
+      "status": 200,
+      "finding": "F80"
+    },
+    {
+      "host": "firebase_rtdb",
+      "method": "PUT",
+      "path": "/users/{player_id}/*.json",
+      "auth": "firebase_id_token",
+      "status": 200,
+      "finding": "F80",
+      "notes": "Write confirmed; no backend trigger"
+    },
+    {
+      "host": "firebase_rtdb",
+      "method": "PUT",
+      "path": "/.json",
+      "auth": "firebase_id_token",
+      "status": 401,
+      "finding": "F80",
+      "notes": "Root write blocked"
+    },
+    {
+      "host": "slip_jvzvavs",
+      "method": "GET",
+      "path": "/api/customergw/p2p-public/upload-info/{order_id}",
+      "auth": "token_param",
+      "status": 200,
+      "finding": "F81",
+      "notes": "Leaks sender (player KTB) + receiver (mule KBANK) PII"
+    },
+    {
+      "host": "slip_jvzvavs",
+      "method": "POST",
+      "path": "/api/customergw/p2p-public/upload-slip/{order_id}",
+      "auth": "token_param",
+      "status": 200,
+      "finding": "F81",
+      "notes": "EasySlip OCR slip upload (field: slip)"
+    },
+    {
+      "host": "gcs",
+      "method": "GET",
+      "path": "gs://luxino-public/",
+      "auth": "none",
+      "status": 200,
+      "finding": "F05",
+      "notes": "Public — 6 APKs including LuxSms-v2/v3"
+    },
+    {
+      "host": "gcs",
+      "method": "GET",
+      "path": "gs://luxino-pub/",
+      "auth": "none",
+      "status": 200,
+      "finding": "F05"
+    },
+    {
+      "host": "gcs",
+      "method": "GET",
+      "path": "gs://cdn.i-gamingplatform.com/",
+      "auth": "none",
+      "status": 200,
+      "finding": "F05"
+    },
+    {
+      "host": "gcs",
+      "method": "GET",
+      "path": "gs://we88z/",
+      "auth": "none",
+      "status": 200,
+      "finding": "F05"
+    },
+    {
+      "host": "gcs",
+      "method": "GET",
+      "path": "gs://pcdn.i-gamingplatform.com/",
+      "auth": "none",
+      "status": 403,
+      "finding": ""
+    },
+    {
+      "host": "gcs",
+      "method": "GET",
+      "path": "gs://cdn.ifuse.games/",
+      "auth": "none",
+      "status": 403,
+      "finding": ""
+    }
+  ],
+  "total_endpoints": 108,
+  "findings_mapped": [
+    "F01",
+    "F02",
+    "F03",
+    "F04",
+    "F05",
+    "F29",
+    "F30",
+    "F36",
+    "F52",
+    "F54",
+    "F56",
+    "F57",
+    "F58",
+    "F62",
+    "F63",
+    "F78",
+    "F80",
+    "F81"
+  ],
+  "stats": {
+    "by_status": {
+      "200": 82,
+      "401": 10,
+      "400": 8,
+      "502": 2,
+      "500": 2,
+      "404": 2,
+      "403": 2
+    },
+    "by_host": {
+      "pbapi": 18,
+      "mgapi": 41,
+      "bgapi": 38,
+      "firebase_rtdb": 3,
+      "slip_jvzvavs": 2,
+      "gcs": 6
+    },
+    "auth_types": [
+      "bo_creds",
+      "c2",
+      "c2/none",
+      "firebase_id_token",
+      "gateway_jwt",
+      "none",
+      "papdieaw",
+      "player_jwt",
+      "player_jwt_bola",
+      "token_param"
+    ]
+  }
+}
