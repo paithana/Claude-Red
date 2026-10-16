@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-17T06:05:42+07:00",
+  "generated": "2026-10-17T09:35:00+07:00",
   "engagement": "WE88Z-VAK88-2026-09",
   "tenants": {
     "vak88z2": "af6efb584a3d317b5a11ab6209b88e1b",
@@ -4583,8 +4583,9 @@
       "path": "/bo/info/permission-event",
       "auth": "player_jwt_bola",
       "status": 200,
-      "finding": "F58",
-      "notes": "BOLA [CONFIRMED] — player JWT returns 200 (2026-10-17)"
+      "finding": "F86",
+      "notes": "New F86",
+      "description": "Full BO permission map: 1595 events / 29 categories (369KB)"
     },
     {
       "host": "bgapi",
@@ -4709,8 +4710,9 @@
       "path": "/bo/info/specific-domain-config",
       "auth": "player_jwt_bola",
       "status": 200,
-      "finding": "F58",
-      "notes": "Subdomain enumeration"
+      "finding": "F87",
+      "notes": "New F87",
+      "description": "10 domains exposed: m.appvak88.com, m.vak88z3.com, vak88s.com (new)"
     },
     {
       "host": "bgapi",
@@ -4746,7 +4748,8 @@
       "auth": "player_jwt_bola",
       "status": 200,
       "finding": "F58",
-      "notes": "BOLA [CONFIRMED] — player JWT returns 200 (2026-10-17)"
+      "notes": "BOLA F58 extension",
+      "description": "Latest win/withdraw display config"
     },
     {
       "host": "bgapi",
@@ -4781,8 +4784,9 @@
       "path": "/bo/info/upline",
       "auth": "player_jwt_bola",
       "status": 200,
-      "finding": "F58",
-      "notes": "BOLA [CONFIRMED] — player JWT returns 200 (2026-10-17)"
+      "finding": "F88",
+      "notes": "New F88",
+      "description": "10 affiliate upline IDs"
     },
     {
       "host": "bgapi",
@@ -8557,5 +8561,5 @@
       "403": 2
     }
   },
-  "total_findings": 83
+  "total_findings": 88
 }

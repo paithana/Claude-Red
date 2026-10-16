@@ -613,3 +613,27 @@ KBANK 0363715605
 
 ## Last Updated
 2026-10-11 08:15+07
+
+### F86: BOLA — Full BO Permission Map (1595 events/29 categories) /bo/info/permission-event [CONFIRMED - HIGH]
+- **Impact**: Complete back-office permission/event taxonomy exposed via player JWT — 1595 permission events across 29 module categories
+- **Vector**: GET `/bo/info/permission-event` with player JWT → 369KB response with all BO permission definitions
+- **Categories**: MENU_MODULE_MEMBER (108), MENU_MODULE_PAYMENT (414), MENU_MODULE_WITHDRAW (124), MENU_MODULE_REPORT (284), MENU_MODULE_CMS (175), MENU_MODULE_AFFILIATE (34), MENU_MODULE_SMART_CRM (72), +22 more
+- **Operational intelligence**: Full event_path + event_code_name for every BO action — reveals undiscovered API routes, privilege levels, and admin workflow
+- **Saved**: `data/json/vak88z2_extract/bo_permission_event_2026-10-17.json`
+- **CWE**: CWE-639 (Authorization Bypass), CWE-200 (Information Exposure)
+
+### F87: BOLA — Complete Domain Infrastructure /bo/info/specific-domain-config [CONFIRMED - MEDIUM]
+- **Impact**: All 10 platform domains/subdomains exposed (4 previously unknown)
+- **Vector**: GET `/bo/info/specific-domain-config` with player JWT
+- **New domains discovered**: `m.appvak88.com` (LIVE — Nuxt SPA), `m.vak88z3.com` (LIVE — Nuxt SPA), `m.vak88k1.co` (subdomain), `vak88s.com` (domain-for-sale — no longer platform-owned)
+- **Full list**: m.appvak88.com, m.vak88k1.co, m.vak88k1.com, m.vak88k2.com, m.vak88z2.com, m.vak88z3.com, vak88k1.com, vak88k2.com, vak88s.com, vak88z2.com
+- **Risk**: Extended attack surface — m.appvak88.com and m.vak88z3.com are live Nuxt SPAs sharing same TID; vak88s.com domain expired/abandoned (phishing risk)
+- **Saved**: `data/json/vak88z2_extract/bo_specific_domain_config_2026-10-17.json`
+- **CWE**: CWE-639 (Authorization Bypass), CWE-200 (Information Exposure)
+
+### F88: BOLA — Affiliate Upline IDs /bo/info/upline [CONFIRMED - LOW]
+- **Impact**: 10 affiliate upline IDs exposed (obfuscated alphanumeric format, e.g. `000fosmowK`)
+- **Vector**: GET `/bo/info/upline` with player JWT
+- **Saved**: `data/json/vak88z2_extract/bo_upline_2026-10-17.json`
+- **CWE**: CWE-639 (Authorization Bypass)
+
