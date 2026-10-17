@@ -1,6 +1,6 @@
 # Engagement: WE88Z-VAK88-2026-09
 
-## Current State (2026-10-17 15:58+07)
+## Current State (2026-10-17 21:10+07)
 
 ### Service Status Matrix
 | Service | Endpoint | Status |
@@ -834,6 +834,23 @@ KBANK 0363715605
 - **Same class as**: F02 (NoSQL injection on /pb/latest-win)
 - **Saved**: `data/json/vak88z2_extract/withdraw_secret_keys_20261017.json`
 - **CWE**: CWE-943 (NoSQL Injection), CWE-200 (Information Exposure)
+
+### F110: React2Shell (CVE-2025-55182/66478) — NOT APPLICABLE [INFO]
+- **CVE**: Next.js Server Actions prototype pollution → RCE
+- **Result**: Platform uses Nuxt.js (Vue) on all frontends — no Next.js anywhere; not applicable
+- **Tested**: all frontends (`_nuxt/` paths confirmed, `/_next/` = 404); /__nuxt_devtools__/ is SPA catch-all, not real devtools
+- **CWE**: N/A
+
+### F111: bgapi Go Backend Ignores All FeathersJS Query Operators [INFO]
+- **Result**: `$where`, `$select`, `$limit`, `$skip` all ignored by bgapi; field projection hardcoded per handler
+- **Contrast**: pbapi honors `$select`/`$limit`/`$skip`; `$where` stripped before MongoDB eval
+- **CWE**: N/A (correct behavior)
+
+### F83/F84 Extension (2026-10-17 20:40+07): New Slip Domain + New Mule
+- **New slip service**: `service.linkdeepcode.xyz` (MYPAYS24-LOCAL rotated from sysglobalconnect.com; same PHP API structure)
+- **New mule**: KBANK `2271478065` / วชิระเดช จองกลาง (MYPAYS24-LOCAL window 20:40+07; not in prior F52/F82/F83 pools)
+- **chk-slip result**: slip too old (7 days); 60-min window mechanics unchanged
+- **CWE**: CWE-200, CWE-306
 
 ### F84 Extension: Real Slip Verification — Bank API Validates Against Bank Records [CONFIRMED - CRITICAL]
 - **Upload field name**: `file` (not `slip`) — discovered via multipart field enumeration
