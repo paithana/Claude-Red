@@ -1,0 +1,27 @@
+{
+  "platform": "cybermagic555.com (kaichon_root)",
+  "extracted": "2026-10-17 13:41+07",
+  "method": "LoginOwner API with password Aa112233",
+  "tokens": [
+    {"owner": "kc", "token": "jbaLjsuBe4U7ihtQpRXmTXsXb", "role": "Employee", "id": 2},
+    {"owner": "kckz", "token": "pAyVp3uvJwn2kCjn3Udx9uZuu", "id": 4},
+    {"owner": "kcsys1", "token": "j1xk9ctNZ6KQeHXJBGRNDi111", "name": "Admin", "tel": "0888888888", "id": 5},
+    {"owner": "kctest1", "token": "ER3wDqGJgQcMT5T5gURmr763k", "id": 7}
+  ],
+  "failed": [
+    {"owner": "kctest", "reason": "Invalid Owner or Password", "id": 6}
+  ],
+  "sqli_confirmed": {
+    "endpoint": "/api/AddCreditBank",
+    "parameter": "BankLogID (multipart)",
+    "technique": "Time-based blind",
+    "dbms": "MariaDB 11.x",
+    "database": "kaichon_root",
+    "tables": 19
+  },
+  "notes": [
+    "access_token table has 7 rows, 5 columns",
+    "Token column confirmed via time-blind SQLi",
+    "UNION injection blocked by Monarx WAF"
+  ]
+}

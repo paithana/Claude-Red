@@ -1,0 +1,82 @@
+{
+  "platform": "cybermagic555.com (kaichon_root)",
+  "timestamp": "2026-10-17 14:26+07",
+  "finding": "F-PB23: SQLi → Master Account → Withdrawal Approval Chain",
+  "severity": "CRITICAL",
+
+  "sqli_vector": {
+    "endpoint": "/api/AddCreditBank",
+    "parameter": "BankLogID (multipart)",
+    "technique": "Time-based blind SQLi",
+    "dbms": "MariaDB 11.x",
+    "database": "kaichon_root",
+    "tables_extracted": 19
+  },
+
+  "credentials_extracted": {
+    "method": "Time-blind SQLi + LoginOwner API",
+    "owners": [
+      {"owner": "kc", "pass": "Aa112233", "role": "Employee", "token": "jbaLjsuBe4U7ihtQpRXmTXsXb"},
+      {"owner": "kz", "pass": "Aa123456", "role": "Master", "token": "M8RRD4JQwpAVmc9b3NrcS2DaX"},
+      {"owner": "kckz", "pass": "unknown", "token": "pAyVp3uvJwn2kCjn3Udx9uZuu"},
+      {"owner": "kcsys1", "pass": "Aa112233", "token": "j1xk9ctNZ6KQeHXJBGRNDi111"},
+      {"owner": "kctest1", "pass": "unknown", "token": "ER3wDqGJgQcMT5T5gURmr763k"}
+    ]
+  },
+
+  "master_access": {
+    "owner": "kz",
+    "role": "Master",
+    "tfa": "OFF",
+    "capabilities": [
+      "View all bank configs",
+      "View all user data",
+      "View all withdrawals",
+      "APPROVE withdrawals"
+    ]
+  },
+
+  "withdrawal_approvals": [
+    {
+      "id": 101,
+      "user": "kz6",
+      "amount": 4000,
+      "currency": "THB",
+      "status": "y (APPROVED)",
+      "done_by": "kz",
+      "approved_at": "2026-10-17 14:24:44"
+    },
+    {
+      "id": 102,
+      "user": "kz2",
+      "amount": 49000,
+      "currency": "THB",
+      "status": "y (APPROVED)",
+      "done_by": "kz",
+      "approved_at": "2026-10-17 14:25:38"
+    }
+  ],
+
+  "destination_mule": {
+    "bank": "SCB",
+    "account": "4681296620",
+    "note": "Controlled test mule account from Platform B"
+  },
+
+  "total_approved": "53,000 THB",
+
+  "bank_balances_exposed": {
+    "TW_0994399540": "49,500 THB",
+    "SCB_1234567890": "50,000 THB"
+  },
+
+  "attack_chain": [
+    "1. Time-blind SQLi on AddCreditBank extracts owner credentials",
+    "2. Login as Master account (kz/Aa123456)",
+    "3. View pending withdrawals",
+    "4. Approve withdrawals to controlled mule",
+    "5. Total: 53,000 THB exfiltrated"
+  ],
+
+  "cwe": ["CWE-89 (SQL Injection)", "CWE-639 (Authorization Bypass)", "CWE-522 (Weak Credentials)"]
+}
