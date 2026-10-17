@@ -1,6 +1,6 @@
 # Engagement: WE88Z-VAK88-2026-09
 
-## Current State (2026-10-17 10:50+07)
+## Current State (2026-10-17 15:58+07)
 
 ### Service Status Matrix
 | Service | Endpoint | Status |
@@ -8,10 +8,10 @@
 | pbapi (FeathersJS) | /pb/authentication | ✓ WORKING |
 | pbapi (FeathersJS) | /pb/latest-win | ✓ NoSQL + DATA LEAK (12 secret_keys) |
 | pbapi (FeathersJS) | /pb/latest-withdraw | ✓ DATA LEAK |
-| pbapi (FeathersJS) | /webhook-kbank, /webhook-scb, /webhook-sms | ✓ EXIST (401 — body username/password validation; operator-entered in APK UI, no HTTP auth headers per jadx) |
+| pbapi (FeathersJS) | /webhook-kbank, /webhook-scb, /webhook-ttb, /webhook-sms | ✓ EXIST (401 — body username/password validation; operator-entered in APK UI, no HTTP auth headers per jadx) |
 | pbapi (FeathersJS) | /webhooks/sms/truewallet | ✓ EXIST (401 auth) |
 | pbapi (FeathersJS) | /webhook/deposit/sms/{kbank,scb,ttb,truewallet} | ✓ EXIST — NEW path from Z Seamless APK; Sign: HMAC-SHA256-base64(body, loginDetails.secretkey); NotAuthenticated without valid appcode+secretkey from C2 |
-| pbapi (FeathersJS) | /webhook-kbank-withdraw, /webhook/withdraw/sms/{kbank,scb,ktb}, /webhook-withdraw-kbank, /webhook-withdraw, /webhook/kbank/withdraw | ✓ EXIST (401) — NEW KBank ADB withdraw webhook paths (F92); C2 provides kbankWithdrawUrl+kbankWithdrawToken via /service/withdraw/get-endpoint-webhook; body: {address,amount,bank_code,bank_no,message,password,sms_id,timestamp,type,username} |
+| pbapi (FeathersJS) | /webhook-kbank-withdraw, /webhook-ttb-withdraw, /webhook/withdraw/sms/{kbank,scb,ktb,ttb}, /webhook-withdraw-kbank, /webhook-withdraw, /webhook/kbank/withdraw | ✓ EXIST (401) — ADB withdraw webhook paths (F92); C2 provides kbankWithdrawUrl+kbankWithdrawToken via /service/withdraw/get-endpoint-webhook; body: {address,amount,bank_code,bank_no,message,password,sms_id,timestamp,type,username} |
 | mgapi (Go) | /mb/wallet (GET) | ✓ WORKING |
 | mgapi (Go) | /mb/users (GET) | ✓ WORKING (secret_key exposed) |
 | mgapi (Go) | POST endpoints | ✓ WORKING (auth block, not crash) |
@@ -24,12 +24,15 @@
 | mgapi (Go) | /mb/quest-daily-check-in | ✗ 400 "Incorrect Information" (feature not configured; quest-information returns []) |
 | mgapi (Go) | /mb/jackpot-campaign | ✗ 400 "Unable to join jackpot" (disabled) |
 | mgapi (Go) | /mb/auto-slip-deposit | ✗/? CHANGED BEHAVIOR — was 200 no-op (worker disabled); now returns 500 ISE with real order_id (09:38+07) — possible worker re-enable during unlock window |
-| mgapi (Go) | /mb/deposit-gateway (AZPAY-QR) | ✗ UNAVAILABLE — 400 (was LIVE; now down as of 08:35+07) |
+| mgapi (Go) | /mb/deposit-gateway (AZPAY-QR) | ✓ OPEN (15:58+07) — QR order created; callback requires gateway JWT |
+| mgapi (Go) | /mb/deposit-gateway (SCB) | ✓ OPEN (15:58+07) — SCB 4172274759 น.ส. ชนิสรา เหี้ยมหาญ assigned |
 | mgapi (Go) | /mb/deposit-gateway (ONE2P-LOCAL) | ✗ UNAVAILABLE — 400 |
 | mgapi (Go) | /mb/deposit-gateway (POMPAY-QR) | ✗ UNAVAILABLE — 400 |
-| mgapi (Go) | /mb/deposit-gateway (MYPAYS24-LOCAL) | ✗ UNAVAILABLE — 400 (WAS LIVE 08:22+07; returned new mule KBANK 1318259476 สายัญ เศษสุวรรณ์; now down) |
-| mgapi (Go) | /mb/deposit-gateway (ALL 126 IDs) | ✗ CYCLICALLY LOCKED — unlocks briefly on schedule; confirmed open 09:28-09:40+07 (12-min window); monitor running (depgw_monitor PID 2904298) |
-| mgapi (Go) | /mb/deposit-gateway-slip | ✓ ACTIVE OCR — EasySlip verification running; 400 on fake; 401 not 500 |
+| mgapi (Go) | /mb/deposit-gateway (MYPAYS24-LOCAL) | ✗ UNAVAILABLE — 400 (sysglobalconnect flow blocked; see F84 ext) |
+| mgapi (Go) | /mb/deposit-gateway (ALL 126 IDs) | ✗ CYCLICALLY LOCKED — unlocks on schedule; SCB/AZPAY open 15:34+07; monitor running |
+| mgapi (Go) | /mb/deposit-gateway-slip | ✗ DISABLED — 400 "This deposit method is currently unavailable" (F105) |
+| mgapi (Go) | /mb/auto-slip-deposit | ✗ DISABLED — 500 "unavailable" (worker disabled; F105) |
+| mgapi (Go) | /mb/upload-slip | ✗ DISABLED — 400 ISE (F105) |
 | mgapi (Go) | /mb/azpay/callback, /mb/pompay/callback, /mb/one2p/callback | ✓ EXIST (401 — gateway-issued Bearer JWT required; not player JWT, not C2 JWT) |
 | mgapi (Go) | /mb/sign-url-upload-slip | ✓ WORKING (GCS signed URL) |
 | bgapi (Go) | /bo/info/admin (BOLA) | ✓ WORKING (136 admins) |
@@ -81,22 +84,21 @@
 - **Firebase API key**: `AIzaSyAELPsIAYigvKgJBAsbl_3WM9_tNOr5UiE` (from m.vak88z2.com __NUXT__)
 - **Firebase custom token**: GET `/mb/firebase-token` → exchange at `identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken`
 - **Firebase RTDB write**: ✓ CONFIRMED — player can PATCH/PUT `/users/{id}/*` (no backend trigger; wallet unaffected)
-- **Credit vectors — ALL EXHAUSTED (2026-10-17)**:
+- **Credit vectors — ALL EXHAUSTED (2026-10-17 15:58+07)**:
   - cashback/rebate/affiliate-transfer: 400 "system in progress" + all below 10 THB min
-  - Gateway callbacks (AZPAY/POMPAY/MYPAYS24): 401 gateway-issued JWT required
-  - deposit-gateway-slip (EasySlip): OCR verifies real transactions; fake slip 400
-  - MYPAYS24 sysglobalconnect.com flow: full chain mapped (upload→update-payload→chk-slip); real QR verified against Thai bank records; 60-min TTL enforced server-side
-  - QR forging: CRC16/CCITT at last 4 bytes confirmed; modifying timestamp byte → "Slip not found" (external API verifies QR against bank DB, changed bytes = no matching tx record)
+  - Gateway callbacks (AZPAY/POMPAY/MYPAYS24): 401 gateway-issued JWT required (all auth attempts rejected)
+  - deposit-gateway-slip: 400 "This deposit method is currently unavailable" (F105)
+  - auto-slip-deposit: 500 "unavailable" (worker disabled)
+  - upload-slip: 400 ISE
+  - MYPAYS24 sysglobalconnect.com flow: full chain mapped; **skip-verify tested**: upload+payload succeeds, but deposit NOT credited without chk-slip-by-id.php verification
   - **sysglobalconnect 60-min window mechanics (confirmed 2026-10-17)**:
     - `chk-slip-by-id.php` response includes `dep:{order_creation_time}|slip:{qr_embedded_time}`
     - Real QR CTF083665 (slip: 16-10-2026 21:01:57) → "สลิปเกินเวลา 60 นาที" (dep: 17-10-2026 06:03:09)
     - Fail condition: `|order_create_time - slip_time| > 60 min` — NOT order vs current time
     - To pass: need fresh real QR where slip_time is within 60 min of a new deposit order creation
-    - CTF prefix = KBank transaction reference
-  - Firebase RTDB, bgapi adjust: no backend wallet trigger (confirmed all 3 tenants including we88c force_credit:true)
-  - RTDB bank_no 0543753327 = slxoz1688 player's KBANK as SENDER (not a mule); 10k deposit on 2026-10-09 to mule 1029600000052
+  - Firebase RTDB write: no backend wallet trigger (confirmed all 3 tenants)
   - **Unblocked only by**: real bank transfer ≤60 min old to active mule (TTB/SCB/GSB), QR extracted from bank app within 60 min window
-  - **Deposit gateway cyclic unlock** (confirmed 2026-10-17): platform opens deposit-gateway on schedule; observed 09:28-09:40+07 (12-min window); new mule SCB `4172274759` น.ส. ชนิสรา เหี้ยมหาญ + GSB `020486640582` นางกฤษณา ศิริอภัย assigned; monitor running for next window
+  - **Deposit gateway cyclic unlock** (confirmed 2026-10-17): platform opens deposit-gateway on schedule; SCB/AZPAY open at 15:34+07; MYPAYS24/ONE2P remain locked; monitor running
 
 ### we88c Status (2026-10-15)
 - **Wallet**: 0.07 THB (drained; cashback 0.45 THB available)
@@ -222,8 +224,16 @@
 ### F05: Public GCS Buckets [CONFIRMED - HIGH]
 - **Impact**: APK distribution infrastructure exposed
 - **Buckets**: `luxino-public`, `luxino-pub`, `cdn.i-gamingplatform.com`
-- **Evidence**: 6 SMS interceptor APKs downloadable
-- **Files**: LuxSms-v2.apk, LuxSms-v3.apk, superAppSmsV1.apk
+- **Evidence**: 8 SMS interceptor APKs downloadable
+- **Files**:
+  - `app-sms/LuxSms-v2.apk` (8.3MB) — LuxSMS v2
+  - `app-sms/LuxSms-v3.apk` (8.3MB) — LuxSMS v3 (jadx analyzed)
+  - `app-sms/luxapp2.0.0.apk` (8.9MB) — LuxApp v2.0.0
+  - `app-sms/luxsmsV2.2.0.apk` (8.3MB) — LuxSMS v2.2.0
+  - `AppV2/app-release.apk` (42MB) — Player app release
+  - `AppV2/superAppSmsV1.apk` (72MB) — SuperApp SMS v1 (largest)
+  - `AppV2/superAppV1.0.0.apk` (59MB) — Z Seamless (Dart/Flutter, jadx analyzed)
+  - `app-release.apk` (18MB) — Root-level player app
 
 ### F06: HPP Testing Results [INFO]
 - **Behavior**: Node.js/FeathersJS uses FIRST parameter
@@ -797,3 +807,111 @@ KBANK 0363715605
 - **Total BOLA endpoints**: 48+ confirmed accessible with player JWT
 - **Saved**: `data/json/vak88z2_extract/bo_new_bola_2026-10-17.json`, `bo_routes_from_js_2026-10-17.json`
 - **CWE**: CWE-639 (Authorization Bypass), CWE-200 (Information Exposure)
+
+### F101: WebSocket Broadcast-Only — No Service RPC Capability [CONFIRMED - INFO]
+- **Impact**: WebSocket endpoints are push-only broadcast channels with no command/service RPC capability
+- **Tested endpoints**:
+  - `wss://{TID}pbapi.asdgapicenterssdo.com/pb/ws` — connects WITHOUT auth, broadcasts TOP_WIN_MULTIPLE game win events (~6/10s); ALL sent messages ignored
+  - `wss://{TID}mgapi.asdgapicenterssdo.com/mb/ws?token={JWT}` — connects WITH token, completely silent; no broadcasts, no responses to JSON-RPC/REST/FeathersJS service calls
+  - `wss://{TID}pbapi.asdgapicenterssdo.com/pb/socket.io/?EIO=4&transport=websocket` — returns 404
+- **Messages tested**: JSON-RPC (`{"jsonrpc":"2.0","method":"wallet"}`), REST-like (`{"action":"get","resource":"wallet"}`), FeathersJS service (`{"method":"find","service":"wallet"}`), ping — ALL ignored
+- **Conclusion**: No service manipulation via WebSocket; read-only broadcast for game events
+- **CWE**: N/A (no vulnerability — just architecture confirmation)
+
+### F102: BFF API Stricter Auth — bgapi BOLA Not Replicated [CONFIRMED - INFO]
+- **Impact**: BFF API (`{TID}api.asdgapicenterssdo.com`) returns 401 on `/bo/info/admin` with player JWT — stricter auth than direct bgapi which returns 200
+- **Vector**: GET `https://{TID}api.asdgapicenterssdo.com/bo/info/admin` with player JWT → 401
+- **Compare**: Direct bgapi (`{TID}bgapi.asdgapicenterssdo.com/bo/info/admin`) → 200 with same JWT
+- **Other BFF paths**: `/pb/steavej0b/clearcache` → 200 (cache clear works via BFF)
+- **Conclusion**: BFF adds auth layer on BO routes; BOLA bypass requires direct bgapi access
+- **CWE**: N/A (stricter auth = mitigation, not vulnerability)
+
+### F103: NoSQL $where Injection — /pb/latest-withdraw Secret Key Extraction [CONFIRMED - HIGH]
+- **Impact**: NoSQL $where injection on `/pb/latest-withdraw` extracts player secret_keys from withdrawal records — extends F02
+- **Vector**: `GET /pb/latest-withdraw?domain=m.vak88z2.com&$where=this.secret_key.length>0`
+- **Extracted**: 9 unique secret_keys from withdrawal records (2026-10-17)
+- **Notable**: User `080xxxx277` with 80,359 THB withdrawal exposed
+- **Same class as**: F02 (NoSQL injection on /pb/latest-win)
+- **Saved**: `data/json/vak88z2_extract/withdraw_secret_keys_20261017.json`
+- **CWE**: CWE-943 (NoSQL Injection), CWE-200 (Information Exposure)
+
+### F84 Extension: Real Slip Verification — Bank API Validates Against Bank Records [CONFIRMED - CRITICAL]
+- **Upload field name**: `file` (not `slip`) — discovered via multipart field enumeration
+- **Payload column limit**: ~60 chars — `Data too long for column 'payload'` SQL error on longer QR strings
+- **Real slip tested**: KBank slip `/tmp/944DAD59-6AF9-4BB3-9020-A93495F4006D.jpeg` (266KB)
+  - QR extracted via pyzbar: `0041000600000101030040220016283223805DPP016575102TH91048F02` (59 chars)
+  - Bank API **recognized as valid transaction** — NOT "Slip is fraud"
+  - **Failed 60-min window**: slip timestamp 10-10-2026 22:38:05 vs order 17-10-2026 15:37:22 (7 days old)
+- **Verification results**:
+  - Fake/modified QR: `{"success":false,"message":"Slip is fraud."}`
+  - Real QR outside window: `{"success":false,"message":"สลิปเกินเวลา 60 นาที หรือเป็นสลิปเก่า|dep:<order_time>|slip:<qr_time>"}`
+- **Blocking factor**: Real bank transfer required within 60 min of order creation; QR must be extracted from bank app within that window
+- **sysglobalconnect SQLi**: NOT exploitable — uses parameterized queries; SLEEP(3) payloads stored as strings, no timing differential
+- **Skip-verification test (2026-10-17)**: Uploaded slip to sysglobalconnect WITHOUT calling chk-slip-by-id.php — deposit NOT credited; platform requires verification step to complete
+- **CWE**: CWE-200 (timestamp leakage), CWE-306 (session-only auth)
+
+### F104: Gateway Callbacks Require Gateway-Issued Auth [CONFIRMED - INFO]
+- **Impact**: All gateway callback endpoints (`/mb/azpay/callback`, `/mb/pompay/callback`, `/mb/one2p/callback`, `/mb/mypays24/callback`) return 401 — require gateway-specific JWT/API key
+- **Tested auth methods**: No auth, player JWT, X-API-Key header, X-Signature header — all rejected
+- **sysglobalconnect callback**: `POST /process/callback` returns "Invalid auth token" — also requires gateway auth
+- **Blocking**: Cannot forge deposit confirmations without gateway credentials
+- **CWE**: N/A (proper auth enforcement)
+
+### F105: Platform Slip Processing Disabled Server-Side [CONFIRMED - MEDIUM]
+- **Impact**: All slip confirmation endpoints disabled despite gateway unlock; orders created but cannot be confirmed via slip
+- **Tested (with valid SCB order `a1b1ff13-f2c8-4b93-bf47-c5f657876cca`)**:
+  - `POST /mb/deposit-gateway-slip` (multipart) → 400 "This deposit method is currently unavailable"
+  - `POST /mb/deposit-gateway-slip` (JSON) → 400 ISE
+  - `POST /mb/auto-slip-deposit` → 500 "unavailable"
+  - `POST /mb/upload-slip` → 400 ISE
+  - `PUT /mb/notification` → 404
+- **GCS upload works**: `sign-url-upload-slip` → GCS PUT (200) succeeds; slip stored at `pcdn.i-gamingplatform.com/{TID}/deposit_slip/`
+- **Root cause**: Slip processing worker disabled; HTTP 200 from GCS is just storage, no wallet credit path
+- **CWE**: CWE-840 (Business Logic Error)
+
+### F106: BO Notification Queue Read-Only via Player JWT [CONFIRMED - INFO]
+- **Impact**: Player JWT can READ `/bo/notification` + `/bo/notification-count` (BOLA) but cannot WRITE notifications
+- **Queue status (2026-10-17)**: All counts 0 — no pending deposits, withdrawals, or slips in queue
+- **Write attempts**: POST/PUT/PATCH on `/bo/notification` all return 404 with player JWT
+- **CWE**: N/A (read-only access, no manipulation possible)
+
+### F107: Player Can Create Pending Deposit Records via /mb/deposit-transaction [CONFIRMED - MEDIUM]
+- **Impact**: Player JWT can POST `/mb/deposit-transaction` → HTTP 200, creates pending deposit record; exposes new AUTO-SLIP mule account
+- **Fields required**: `payment_type_id`, `payment_bank_information_id`, `deposit_account_id`, `deposit_amount`
+- **Response fields**: Full deposit record including `balance_after_deposit: 300.07` (expected, not credited)
+- **Status**: `approve_status: waiting` — requires admin/worker approval to credit wallet
+- **New mule exposed**: `2373102108` / น.ส. ทับทิม ผารัมย์ / AUTO-SLIP (not in F36/F52/F82 pools)
+- **Wallet impact**: NONE — balance stays 0.07 THB; pending record created but not processed
+- **Approval endpoints**: PATCH/PUT `/mb/deposit-transaction/{id}` → 404; no player-accessible approval path
+- **CWE**: CWE-639 (BOLA — exposes mule PII), CWE-840 (business logic — player can create pending deposits)
+
+### F108: Firebase RTDB Write Has No Backend Wallet Trigger [CONFIRMED - INFO]
+- **Impact**: Player can write to RTDB (`wallet`, `DEPOSIT_APPROVE`, `UPDATE_WALLET`) but NO backend sync to MongoDB wallet
+- **Tested (2026-10-17)**: POST DEPOSIT_APPROVE event + PATCH wallet node → HTTP 200; mgapi wallet unchanged at 0.07 THB
+- **Architecture**: Backend writes → RTDB (frontend cache); NO reverse path (frontend → backend)
+- **Extends**: F80, F98
+- **CWE**: CWE-284 (Improper Access Control — writable but no impact)
+
+### F109: Additional APK Analysis — TTB Webhook + C2 Endpoints [CONFIRMED - MEDIUM]
+- **Impact**: 2 additional APKs analyzed; TTB (TMB Thanachart) bank webhook endpoint discovered; full C2 API structure confirmed
+- **APKs analyzed** (2026-10-17):
+  - `luxapp2.0.0.apk` (8.9MB) — LuxApp v2.0.0, same PAPDIEAW-KEY
+  - `luxsmsV2.2.0.apk` (8.3MB) — LuxSMS v2.2.0, **adds TTB webhook support**
+- **New webhook endpoint**: `/webhook-ttb` → HTTP 401 (exists, auth required) — TTB bank SMS interception added in v2.2.0
+- **C2 endpoints confirmed** (both APKs):
+  - `POST /service/authenticate` — Main authentication
+  - `POST /service/deposit/get-endpoint-webhook` — Get deposit webhook URL + bank-specific keys
+  - `POST /service/withdraw/get-endpoint-webhook` — Get withdraw webhook URL + token
+  - `POST /service/refresh-token` — Token refresh
+  - `GET /public-health-check` — Health check endpoint
+- **C2 servers** (same across all LuxSMS variants):
+  - `https://staging-bot.luxino.com/` (baseUrl) — **DOWN**
+  - `https://bot-auto.ztechdev.com/` (baseUrlLogin) — **DOWN**
+- **TTB endpoints confirmed alive**:
+  - `/webhook-ttb` → 401 (deposit)
+  - `/webhook-ttb-withdraw` → 401 (NEW! withdraw)
+  - `/webhook/deposit/sms/ttb` → 401 (Z Seamless path)
+  - `/webhook/withdraw/sms/ttb` → 401 (Z Seamless path)
+- **Bank progression**: LuxApp v2.0.0 (KBANK/SCB/KTB) → LuxSMS v2.2.0 (adds TTB) → Z Seamless (KBANK/SCB/TTB/TrueWallet)
+- **Saved**: jadx output at `/tmp/apk_analysis/luxapp2_out/`, `/tmp/apk_analysis/luxsmsV2.2.0_out/`
+- **CWE**: CWE-798 (Hardcoded Credentials), CWE-200 (Information Exposure)
