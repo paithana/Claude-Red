@@ -1,6 +1,6 @@
 # Engagement: WE88Z-VAK88-2026-09
 
-## Current State (2026-10-17 06:22+07)
+## Current State (2026-10-17 08:35+07)
 
 ### Service Status Matrix
 | Service | Endpoint | Status |
@@ -23,11 +23,11 @@
 | mgapi (Go) | /mb/quest-daily-check-in | ✗ 400 "Incorrect Information" (feature not configured; quest-information returns []) |
 | mgapi (Go) | /mb/jackpot-campaign | ✗ 400 "Unable to join jackpot" (disabled) |
 | mgapi (Go) | /mb/auto-slip-deposit | ✗ UNAVAILABLE (platform config) |
-| mgapi (Go) | /mb/deposit-gateway (AZPAY-QR) | ✓ LIVE — returns EMVCo2 PromptPay QR + order_id (200 THB min, 15min TTL) |
-| mgapi (Go) | /mb/deposit-gateway (ONE2P-LOCAL) | ✗ UNAVAILABLE — 400 (was LIVE 2026-10-15; now down) |
-| mgapi (Go) | /mb/deposit-gateway (POMPAY-QR) | ✓ INTERMITTENT — returns ppasia.co payUrl (100 THB min) |
-| mgapi (Go) | /mb/deposit-gateway (MYPAYS24-LOCAL) | ✗ INTERMITTENT (400 as of 06:20; was LIVE earlier; returns `dest_upload_slip_url` → deposit.sysglobalconnect.com; `use_raw_slip:true`) |
-| mgapi (Go) | /mb/deposit-gateway (others) | ✗ UNAVAILABLE (ALPHAPAY, ALPHAPAY2, PROMPTPAY all 400; KISSVIP 400) |
+| mgapi (Go) | /mb/deposit-gateway (AZPAY-QR) | ✗ UNAVAILABLE — 400 (was LIVE; now down as of 08:35+07) |
+| mgapi (Go) | /mb/deposit-gateway (ONE2P-LOCAL) | ✗ UNAVAILABLE — 400 |
+| mgapi (Go) | /mb/deposit-gateway (POMPAY-QR) | ✗ UNAVAILABLE — 400 |
+| mgapi (Go) | /mb/deposit-gateway (MYPAYS24-LOCAL) | ✗ UNAVAILABLE — 400 (WAS LIVE 08:22+07; returned new mule KBANK 1318259476 สายัญ เศษสุวรรณ์; now down) |
+| mgapi (Go) | /mb/deposit-gateway (ALL 126 IDs) | ✗ ALL UNAVAILABLE — platform-wide deposit lockdown 08:35+07 |
 | mgapi (Go) | /mb/deposit-gateway-slip | ✓ ACTIVE OCR — EasySlip verification running; 400 on fake; 401 not 500 |
 | mgapi (Go) | /mb/azpay/callback, /mb/pompay/callback, /mb/one2p/callback | ✓ EXIST (401 — gateway-issued Bearer JWT required; not player JWT, not C2 JWT) |
 | mgapi (Go) | /mb/sign-url-upload-slip | ✓ WORKING (GCS signed URL) |
@@ -630,6 +630,21 @@ KBANK 0363715605
 - **Risk**: Extended attack surface — m.appvak88.com and m.vak88z3.com are live Nuxt SPAs sharing same TID; vak88s.com domain expired/abandoned (phishing risk)
 - **Saved**: `data/json/vak88z2_extract/bo_specific_domain_config_2026-10-17.json`
 - **CWE**: CWE-639 (Authorization Bypass), CWE-200 (Information Exposure)
+
+### F89: Cross-Tenant JWT Acceptance — Shared Signing Secret [CONFIRMED - CRITICAL]
+- **Impact**: JWTs issued by any tenant (including unknown/test tenants) are accepted by vak88z2 mgapi + bgapi — any player from any tenant can access vak88z2 player APIs and full admin BOLA
+- **Vector**: JWT with `cf: ac79ae7b5648c9b266a6a2608724df1b` (unknown TID, no DNS) accepted by vak88z2 (`af6efb584a3d317b5a11ab6209b88e1b`)
+- **Player**: eea830ab-b187-4f21-9b79-28e2773b2f6b (0972571110) — wallet 0.47 THB
+- **Confirmed access** (2026-10-17):
+  - mgapi `/mb/wallet` → 200 (balance, wallet_id)
+  - mgapi `/mb/firebase-token` → 200 (Firebase custom token for vak88z2 Firebase project)
+  - mgapi `/mb/cashback-transfer` (post) → 400 ISE (routing works; cashback already claimed)
+  - bgapi `/bo/info/admin` → 200 (136 admins — same BOLA as vak88z2 player)
+  - bgapi `/bo/info/settlement-account` → 84,732.19 THB in mule accounts (2026-10-17)
+  - bgapi `/bo/info/general-config` → C2 URL confirmed
+- **Root cause**: HS256 signing secret shared across tenants; `cf` claim not validated against request's TID subdomain
+- **Saved**: `data/json/vak88z2_extract/settlement_accounts_cross_tenant_2026-10-17.json`
+- **CWE**: CWE-287 (Improper Authentication), CWE-639 (Authorization Bypass), CWE-346 (Origin Validation Error)
 
 ### F88: BOLA — Affiliate Upline IDs /bo/info/upline [CONFIRMED - LOW]
 - **Impact**: 10 affiliate upline IDs exposed (obfuscated alphanumeric format, e.g. `000fosmowK`)
