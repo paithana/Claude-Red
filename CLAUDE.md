@@ -1,6 +1,6 @@
 # Engagement: WE88Z-VAK88-2026-09
 
-## Current State (2026-10-17 08:35+07)
+## Current State (2026-10-17 10:50+07)
 
 ### Service Status Matrix
 | Service | Endpoint | Status |
@@ -11,6 +11,7 @@
 | pbapi (FeathersJS) | /webhook-kbank, /webhook-scb, /webhook-sms | ✓ EXIST (401 — body username/password validation; operator-entered in APK UI, no HTTP auth headers per jadx) |
 | pbapi (FeathersJS) | /webhooks/sms/truewallet | ✓ EXIST (401 auth) |
 | pbapi (FeathersJS) | /webhook/deposit/sms/{kbank,scb,ttb,truewallet} | ✓ EXIST — NEW path from Z Seamless APK; Sign: HMAC-SHA256-base64(body, loginDetails.secretkey); NotAuthenticated without valid appcode+secretkey from C2 |
+| pbapi (FeathersJS) | /webhook-kbank-withdraw, /webhook/withdraw/sms/{kbank,scb,ktb}, /webhook-withdraw-kbank, /webhook-withdraw, /webhook/kbank/withdraw | ✓ EXIST (401) — NEW KBank ADB withdraw webhook paths (F92); C2 provides kbankWithdrawUrl+kbankWithdrawToken via /service/withdraw/get-endpoint-webhook; body: {address,amount,bank_code,bank_no,message,password,sms_id,timestamp,type,username} |
 | mgapi (Go) | /mb/wallet (GET) | ✓ WORKING |
 | mgapi (Go) | /mb/users (GET) | ✓ WORKING (secret_key exposed) |
 | mgapi (Go) | POST endpoints | ✓ WORKING (auth block, not crash) |
@@ -22,12 +23,12 @@
 | mgapi (Go) | /mb/coupon-member (POST) | ✗ SERVICE DOWN (500 "Unable to redeem at this time") |
 | mgapi (Go) | /mb/quest-daily-check-in | ✗ 400 "Incorrect Information" (feature not configured; quest-information returns []) |
 | mgapi (Go) | /mb/jackpot-campaign | ✗ 400 "Unable to join jackpot" (disabled) |
-| mgapi (Go) | /mb/auto-slip-deposit | ✗ UNAVAILABLE (platform config) |
+| mgapi (Go) | /mb/auto-slip-deposit | ✗/? CHANGED BEHAVIOR — was 200 no-op (worker disabled); now returns 500 ISE with real order_id (09:38+07) — possible worker re-enable during unlock window |
 | mgapi (Go) | /mb/deposit-gateway (AZPAY-QR) | ✗ UNAVAILABLE — 400 (was LIVE; now down as of 08:35+07) |
 | mgapi (Go) | /mb/deposit-gateway (ONE2P-LOCAL) | ✗ UNAVAILABLE — 400 |
 | mgapi (Go) | /mb/deposit-gateway (POMPAY-QR) | ✗ UNAVAILABLE — 400 |
 | mgapi (Go) | /mb/deposit-gateway (MYPAYS24-LOCAL) | ✗ UNAVAILABLE — 400 (WAS LIVE 08:22+07; returned new mule KBANK 1318259476 สายัญ เศษสุวรรณ์; now down) |
-| mgapi (Go) | /mb/deposit-gateway (ALL 126 IDs) | ✗ ALL UNAVAILABLE — platform-wide deposit lockdown 08:35+07 |
+| mgapi (Go) | /mb/deposit-gateway (ALL 126 IDs) | ✗ CYCLICALLY LOCKED — unlocks briefly on schedule; confirmed open 09:28-09:40+07 (12-min window); monitor running (depgw_monitor PID 2904298) |
 | mgapi (Go) | /mb/deposit-gateway-slip | ✓ ACTIVE OCR — EasySlip verification running; 400 on fake; 401 not 500 |
 | mgapi (Go) | /mb/azpay/callback, /mb/pompay/callback, /mb/one2p/callback | ✓ EXIST (401 — gateway-issued Bearer JWT required; not player JWT, not C2 JWT) |
 | mgapi (Go) | /mb/sign-url-upload-slip | ✓ WORKING (GCS signed URL) |
@@ -36,14 +37,16 @@
 | bgapi (Go) | /bo/info/bank-deposit | ✓ BOLA (126 configs) |
 | bgapi (Go) | /bo/info/provider | ✓ BOLA (75 game providers) |
 | bgapi (Go) | /bo/info/general-config | ✓ BOLA (C2 URL + platform config) |
-| bgapi (Go) | /bo/info/settlement-account | ✓ BOLA (live mule balances ~82,510 THB across 10 accounts — 2026-10-17) |
+| bgapi (Go) | /bo/info/settlement-account | ✓ BOLA (live mule balances 106,772 THB across 11 accounts — 2026-10-17 11:00+07; was 84,732 at 08:22+07, +22,040 in ~2.5h) |
 | bgapi (Go) | /bo/info/payment-bank-account | ✓ BOLA (67 mule accounts + PII; 53 with bank numbers) |
 | bgapi (Go) | /bo/info/admin-activity | ✓ BOLA (44 admin event type categories) |
 | bgapi (Go) | /bo/info/crypto-network | ✓ BOLA (5 crypto networks) |
 | bgapi (Go) | /bo/info/crypto-token | ✓ BOLA (11 crypto tokens) |
 | bgapi (Go) | /bo/notification | ✓ BOLA (notification list) |
 | bgapi (Go) | /bo/notification-read | ✓ BOLA (mark-read writable with player JWT) |
-| bgapi (Go) | 46 /bo/info/* endpoints | ✓ BOLA (all return 200 with player JWT) |
+| bgapi (Go) | /bo/info/withdraw-settlement | ✓ BOLA (8 withdrawal channels) |
+| bgapi (Go) | /bo/info/settlement-gateway-name | ✓ BOLA (4 auto-withdraw gateways) |
+| bgapi (Go) | 48+ /bo/info/* endpoints | ✓ BOLA (all return 200 with player JWT) |
 | bgapi (Go) | ~320 /bo/* non-info endpoints | ✗ 401 (BO auth required) |
 | bgapi (Go) | /bo/authentication | ✓ WORKING (401 auth) |
 | C2 | staging-bot.luxino.com | ✗ DOWN |
@@ -90,8 +93,10 @@
     - Fail condition: `|order_create_time - slip_time| > 60 min` — NOT order vs current time
     - To pass: need fresh real QR where slip_time is within 60 min of a new deposit order creation
     - CTF prefix = KBank transaction reference
-  - Firebase RTDB, bgapi adjust: no backend wallet trigger
+  - Firebase RTDB, bgapi adjust: no backend wallet trigger (confirmed all 3 tenants including we88c force_credit:true)
+  - RTDB bank_no 0543753327 = slxoz1688 player's KBANK as SENDER (not a mule); 10k deposit on 2026-10-09 to mule 1029600000052
   - **Unblocked only by**: real bank transfer ≤60 min old to active mule (TTB/SCB/GSB), QR extracted from bank app within 60 min window
+  - **Deposit gateway cyclic unlock** (confirmed 2026-10-17): platform opens deposit-gateway on schedule; observed 09:28-09:40+07 (12-min window); new mule SCB `4172274759` น.ส. ชนิสรา เหี้ยมหาญ + GSB `020486640582` นางกฤษณา ศิริอภัย assigned; monitor running for next window
 
 ### we88c Status (2026-10-15)
 - **Wallet**: 0.07 THB (drained; cashback 0.45 THB available)
@@ -103,21 +108,21 @@
 - **Bank accounts**: Empty template (none configured)
 - **Provider callbacks**: mgapi /mb/seamless/*, /mb/zseamless/*, /mb/jili/callback etc. all return 401 (exist but require C2-issued JWT)
 
-### slxoz1688 Status (2026-10-15 — LOCKED)
+### slxoz1688 Status (2026-10-17 — LOCKED)
 - **Wallet**: 0.56 THB (last confirmed)
 - **Player ID**: `7685326c-f840-4cff-a904-f10356e1e04b`
 - **Player**: 0972571110 / ธนวัฒน์ พุฒอินทร์
-- **Creds**: `0972571110 / Aa112233` — **⚠️ ACCOUNT LOCKED** as of 2026-10-15 09:00+07 (same lock pattern as vak88z2)
+- **Creds**: `0972571110 / Aa112233` — **⚠️ ACCOUNT LOCKED** — persistent (2026-10-15+, all password variants fail; lock exceeded 13h pattern; may be permanently suspended)
 - **secret_key**: `eac9d392003f7210210f9b616e8db2eac8a58cddeca58b9d7641a90c2c9fcf43`
-- **Banks**: KBANK 0543753327, TrueWallet 0972571110
+- **Banks**: KBANK 0543753327 (player's own sender bank, NOT a mule), TrueWallet 0972571110
 - **Member Level**: Silver (1)
-- **BOLA**: ✗ PATCHED — bgapi returns 401 with player JWT (F01/F36 not exploitable)
+- **BOLA**: ✗ PATCHED — bgapi returns 401 with player JWT (F01/F36 not exploitable); cross-tenant JWT also 401
 - **Mule bank**: KTB 1190350548 / ประสงค์ ทรัพย์สมบูรณ์ (payment_bank_information_id: `798389ac-3167-4d46-915d-6549f3869480`)
 - **auto-slip-deposit**: HTTP 200 "success" with `deposit_amount` field — worker disabled (no wallet credit, pending count stuck at 103)
 - **deposit-gateway**: HTTP 400 "unavailable"
 - **GCS Upload**: sign-url-upload-slip ✓ WORKING → pcdn.i-gamingplatform.com/{TID}/deposit_slip/
 - **GCS Bucket lbb99**: PRIVATE (403)
-- **Firebase RTDB**: Project `slxoz1688`, player can write own `/users/{id}` node (frontend notifications only, no backend trigger)
+- **Firebase RTDB**: ✓ ACCESSIBLE (2026-10-17) — Firebase key `AIzaSyCwnV0I-ctdP_nxdhCTDihk-G2ocp8hvpM` (manage.slxoz1688.com __NUXT__); refresh token VALID; player can write `/users/{id}` (frontend notifications only, no backend trigger)
 - **Correct auto-slip fields**: `{payment_type_id, payment_bank_information_id, deposit_account_id, slip_image_url, deposit_amount}`
 
 ## Confirmed Findings
@@ -646,9 +651,149 @@ KBANK 0363715605
 - **Saved**: `data/json/vak88z2_extract/settlement_accounts_cross_tenant_2026-10-17.json`
 - **CWE**: CWE-287 (Improper Authentication), CWE-639 (Authorization Bypass), CWE-346 (Origin Validation Error)
 
+### F90: Deposit Gateway Cyclic Unlock — New Mule Accounts [CONFIRMED - HIGH]
+- **Impact**: Deposit-gateway opens on a repeating schedule (~12-min window); each window exposes fresh mule PII and creates live deposit orders; AZPAY/POMPAY/PROMPTPAY QR orders generated automatically
+- **Window observed**: 09:28–09:40+07 (2026-10-17); all orders expired simultaneously at `02:40:00.848Z`
+- **New mules exposed** (vak88z2, not in previous F52/F82 data):
+  - **SCB `4172274759`** / น.ส. ชนิสรา เหี้ยมหาญ (order `ad17ad55`) — BankTransferLocal
+  - **GSB `020486640582`** / นางกฤษณา ศิริอภัย (order `aae068a5`) — BankTransferLocal
+  - KTB `0170738035` — บจก. ซู ซู ช้อบ 789 (**SUSPENDED**, "พักใช้ ติดต่อธนาคาร") — still assigned
+  - KBANK `2178190108` — สิรินภา (**"ส่งแก้ โอนเข้าไม่ได้"**) — still assigned
+- **QR-based orders** (auto-credit via gateway callback, no slip upload needed):
+  - AZPAY-QR: PromptPay QR `0002010102113074...` (300 THB; order `a6db240a`)
+  - POMPAY-QR: pay URL `https://ppasia.co/payment?paymentId=...` (order `60faff7d`)
+  - PROMPTPAY ×3: SCB BankTransferQr (order `4507a2ff`)
+- **34/67 IDs open** during window; 33 locked (MYPAYS24, ONE2P, AUTO-SLIP, TRUEWALLET, some KBANK)
+- **auto-slip behavior change**: was 200 no-op → now 500 ISE with real order_id (possible worker re-enabled with unlock)
+- **Monitor**: depgw_monitor PID 2904298, log at scratchpad/depgw_monitor.log, TG alert on unlock
+- **Evidence**: `data/json/vak88z2_extract/deposit_gateway_unlocked_2026-10-17.json`
+- **CWE**: CWE-639 (Authorization Bypass), CWE-200 (PII — mule accounts/names), CWE-840 (suspended mules still assigned)
+
 ### F88: BOLA — Affiliate Upline IDs /bo/info/upline [CONFIRMED - LOW]
 - **Impact**: 10 affiliate upline IDs exposed (obfuscated alphanumeric format, e.g. `000fosmowK`)
 - **Vector**: GET `/bo/info/upline` with player JWT
 - **Saved**: `data/json/vak88z2_extract/bo_upline_2026-10-17.json`
 - **CWE**: CWE-639 (Authorization Bypass)
 
+### F91: BOLA — Full Mule Ecosystem via /bo/info/all-settlement-balance [CONFIRMED - HIGH]
+- **Impact**: 24 withdrawal mule accounts with live balances totaling **241,865.76 THB** exposed — 2.3× more than settlement-account endpoint; new KTB/KKP/LHBANK/SCB mules not visible in F56
+- **Vector**: GET `/bo/info/all-settlement-balance` with player JWT → full mule ecosystem
+- **Evidence (2026-10-17 10:30+07)**:
+  - KTB `6785976251` นายประจักร แป้นถนอม **(เครื่องพัก)** — 49,050.37 THB ← **ADB standby device**
+  - SCB `1652937015` วรรณเพ็ญ สุจริตอาชีพวงษ์ — 19,332.02 THB
+  - KKP `2808101080` น.ส. ศรุตรา ขันติวงษ์ — 19,330 THB
+  - GSB `020488107432` นาย เดโชชัย สิบพลาง — 18,073 THB
+  - GSB `020387431552` น.ส.พิมพ์ใจ พุกสิน — 17,834 THB
+  - GSB `020467091177` น.ส. เมธาวี สิริธรารัต — 15,665 THB
+  - KKP `2808189923` นาย ณัฐดนัย บุญเติม — 13,451 THB
+  - KKP `2808117661` นาย ธีระพล ภิรมย์มาก — 13,076 THB
+  - + 16 more accounts
+- **ADB infrastructure confirmed** (2026-10-17):
+  - `/bo/adb-management` → HTTP 401 (alive, admin auth required)
+  - Bot OTP endpoints: `/bo/withdrawal-settlement-gsb-otp`, `/bo/withdrawal-settlement-kkp-otp`, `/bo/withdrawal-settlement-scb-otp`, `/bo/withdrawal-settlement-ktb-bot-sign-url` — all 401
+  - Permission `MODULE_SETTLEMENT_FIND_ADB_MANAGEMENT` confirms ADB device management exists
+  - KTB account "(เครื่องพัก)" = standby Android device running KTB banking app via ADB
+- **Saved**: `data/json/vak88z2_extract/all_settlement_balance_2026-10-17b.json`
+- **CWE**: CWE-639 (Authorization Bypass), CWE-200 (Information Exposure)
+
+### F92: Withdraw SMS Webhook Endpoints — 7 Paths Alive [CONFIRMED - MEDIUM]
+- **Impact**: 7 KBank/SCB/KTB withdraw OTP webhook endpoints confirmed alive on pbapi — part of ADB withdrawal automation infrastructure; all return 401 (auth required)
+- **Vector**: POST to `{TID}pbapi.asdgapicenterssdo.com/webhook-kbank-withdraw` (and 6 variants) — HTTP 401 ≠ 404 confirms existence
+- **Alive paths**: `/webhook-kbank-withdraw`, `/webhook/withdraw/sms/kbank`, `/webhook/withdraw/sms/scb`, `/webhook/withdraw/sms/ktb`, `/webhook-withdraw-kbank`, `/webhook-withdraw`, `/webhook/kbank/withdraw`
+- **APK flow (from jadx LuxSms-v3)**: KBank ADB device gets "โอนให้บ/ช(\d{10}).*ยอด(\d*\.?\d*) Ref=(\w*) OTP=(\d*)" SMS → APK calls C2 `/service/withdraw/get-endpoint-webhook` → receives `kbankWithdrawUrl` + `kbankWithdrawToken` → POSTs OTP to platform webhook
+- **Auth**: `Authorization: <C2 Bearer>` + `papdieawKey: <kbankWithdrawToken>` (C2-provisioned, C2 DOWN)
+- **Body**: `{address, amount, bank_code, bank_no, message, password, sms_id, timestamp, type, username}` (from `ReadSmsRequest.java`)
+- **Blocking**: C2 DOWN → can't obtain `kbankWithdrawToken`; platform validates `username`/`password` against operator-configured SharedPrefs
+- **CWE**: CWE-200 (Information Exposure — endpoint enumeration), CWE-798 (Hardcoded credentials in APK)
+
+### F93: BOLA — Member Level Config /bo/info/member-level [CONFIRMED - LOW]
+- **Impact**: Platform loyalty tier thresholds and UUIDs exposed (Bronze→Black, deposit ranges 0–100K+ THB)
+- **Vector**: GET `/bo/info/member-level` with player JWT → 6-level config array
+- **Levels**: Bronze (0-100), Silver (0-1001), Gold (1001-15000), Diamond (15001-50000), Platinum (50001-100000), Black (100001+) THB
+- **Saved**: `data/json/vak88z2_extract/bo_member_level_2026-10-17.json`
+- **CWE**: CWE-639 (Authorization Bypass)
+
+### F94: KBZ Pay + BCEL Laos Integration — Multi-Country Platform [CONFIRMED - MEDIUM]
+- **Impact**: Platform has KBZ Pay (Myanmar) endpoints + BCEL Laos banking configured — confirms multi-country illegal gambling operation; error messages localized in Bengali/Chinese/Spanish/Indonesian
+- **KBZ Pay**: `/bo/settlement-kbzpay-login` + `/bo/settlement-kbzpay-services` — HTTP 401 on bgapi (alive, BO auth required); NOT active for vak88z2 tenant
+- **BCEL Laos**: `BCEL-LAK` (Lao Kip) + `BCEL-THB` (THB via BCEL) in bank-deposit config (IDs: `406ea625`, `bfd70a42`) — returns 400 "unavailable" (configured but inactive for vak88z2)
+- **Multi-language evidence**: Error messages in `bd` (Bengali), `cn` (Chinese), `en`, `es` (Spanish), `id` (Indonesian) — designed for global SaaS deployment
+- **127 total payment types** in bank-deposit: Thai banks, crypto (ALPHAPAY2-CRYPTO, DIREPAY-CRYPTO, ABIT-CRYPTO, CRYPTO), BCEL Laos, BOAUTOSERVICE-LOCAL (ADB bot), AUTOPEER-P2P, TrueWallet, dozens of QR aggregators
+- **Saved**: `data/json/vak88z2_extract/bo_bank_deposit_types_2026-10-17.json`
+- **CWE**: CWE-639 (BOLA — exposed payment configuration), CWE-200 (Information Exposure)
+
+### F61 Extension: 5 Total Unauthenticated Manage Panels [CONFIRMED - HIGH]
+- **Added panels** (2026-10-17): `manage.vak88z3.com` + `manage.appvak88.com` (both HTTP 200, no auth)
+- **Both panels serve vak88z2 config** (TID `af6efb584a3d317b5a11ab6209b88e1b`) — additional alias domains
+- **New internal hostname confirmed**: `vak88-api:20000` (FeathersJS), `vak88-api-go-api-backoffice:20000` (bgapi), `vak88-api-go-api-public:20000` (mgapi)
+- **Firebase Admin service account**: `firebase-adminsdk-1ua4z@vak88z.iam.gserviceaccount.com` (from /mb/firebase-token JWT decode)
+- **GCS**: `gs://vak88` exists (403 private); `gs://vak88z` does not exist
+- **Saved**: `data/json/vak88z2_extract/new_manage_panels_2026-10-17.json`
+- **Total manage panels now 5**: manage.vak88z2.com, manage.we88c.com, manage.slxoz1688.com, manage.vak88z3.com, manage.appvak88.com
+
+### F96: Full Withdrawal Mule Ecosystem — 88 Accounts + Live ADB Drain Observed [CONFIRMED - CRITICAL]
+- **Impact**: 88 withdrawal mule accounts with PII + operational method tags exposed; ADB bot confirmed draining 49,050 THB from KTB 6785976251 in real-time (2026-10-17 11:20+07)
+- **Tiers**: ADB Auto (8) / API Auto (22) / Manual ถอนมือ (54) / Gateway (4)
+- **ADB pool**: GSB×3 + KBANK×5 (tagged "(ถอน ADB)") — KBank OTP SMS intercept via LuxSMS
+- **Corp shells**: KBANK บจก.เดอะริช แอเรีย, บจก.โอลิมเปีย เจมส์, บจก. แฮปปี้เบิร์ด, บจก.ดับเบิ้ลยู โอ เค — used to obscure fund flows
+- **Live drain (11:00→11:20+07)**: all-settlement-balance 241,865 → 162,124 THB (-79,741 THB); KTB 6785976251 49,050 THB → GONE
+- **Zfinance00-07 operate**: 54 manual accounts (BBL×22 + SCB/KBANK/KKP pools)
+- **Saved**: `data/json/vak88z2_extract/assign_settlement_full_2026-10-17.json`
+- **CWE**: CWE-639, CWE-200, CWE-840
+
+### F95: Firebase RTDB Full Node Structure + Cross-Tenant Data Leakage [CONFIRMED - HIGH]
+- **Impact**: 22 RTDB event keys exposed and writable; SCB-API deposit record for cross-tenant player `eea830ab` written to vak88z2 player's node; KBank mule SMS intercept stored in RTDB
+- **Full node keys (22)**: DEPOSIT_APPROVE (36 entries), DEPOSIT_CONFIRM, DEPOSIT_MEMBER_ADJUST, DEPOSIT_MEMBER_BAY, DEPOSIT_MEMBER_KBANK, DEPOSIT_MEMBER_KTB, DEPOSIT_MEMBER_SCB-API, DEPOSIT_MEMBER_TRUEWALLET, POINT_ADJUST, TRANSACTION_DEPOSIT, UPDATE_CASHBACK, UPDATE_POINT, UPDATE_WALLET, VERIFY_DEPOSIT_GATEWAY, WITHDRAW_REQUEST, deposit_transaction, deposits, pointData, status, transactions, wallet, wallet_history
+- **Cross-tenant data leakage**: `DEPOSIT_MEMBER_SCB-API` contains `user_id: "eea830ab-b187-4f21-9b79-28e2773b2f6b"` (cross-tenant player from F89) with 5000 THB deposit — the 5000 THB SCB-API deposit processed for the cross-tenant player was pushed to vak88z2 player's RTDB node; cross-tenant refs appear in 8/22 keys
+- **KBank mule confirmed via SMS intercept**: `DEPOSIT_MEMBER_KBANK` contains raw banking app SMS: `"K+ 09/10/26 20:32 +1000.00 ref K6B52730"` → dest `bank_no: "1029600000052"` — confirms KBANK mule `1029600000052` and SMS intercept pipeline functional
+- **VERIFY_DEPOSIT_GATEWAY writable**: PATCH to `/users/{id}/VERIFY_DEPOSIT_GATEWAY` → HTTP 200; no backend wallet trigger (frontend notification only)
+- **DEPOSIT_APPROVE injectable**: POST to `/users/{id}/DEPOSIT_APPROVE` → new entry created (200), wallet unchanged — RTDB confirms frontend-only (extends F55/F80)
+- **WITHDRAW_REQUEST exposed**: Player withdrawal requests with bank_no, bank_name, amounts visible in own RTDB node
+- **Saved**: `data/json/vak88z2_extract/rtdb_full_node_2026-10-17.json`
+- **CWE**: CWE-200 (Cross-tenant data exposure), CWE-284 (Improper Access Control — writable keys)
+
+
+### F97: APK Credential Extraction — C2 Auth Keys + Webhook Signing Flow [CONFIRMED - HIGH]
+- **Impact**: Full C2 authentication flow reverse-engineered from APKs; hardcoded secrets extracted; webhook signing algorithm confirmed
+- **APK Sources**:
+  - LuxSMS v3 (`LuxSms-v3.apk`): Native Android/Kotlin
+  - Z Seamless (`superAppV1.0.0.apk`): Dart/Flutter 57MB, developer "popsan"
+- **Extracted Credentials**:
+  - `PAPDIEAW-KEY`: `649e854e68c88b4fbfa611534e740a10c2c87f42582ae150aad2c3aa49092d80` (TrueWallet webhook header)
+  - `Config.secretKey`: `91E3AE696DB136A4AC49C1BB2B695` (Z Seamless C2 auth signing)
+- **Z Seamless Auth Flow**:
+  1. APK → C2 `/authentication` with `prefix` (signed with `Config.secretKey`)
+  2. C2 returns `loginDetails` including per-device `secretkey`
+  3. APK → Platform webhook: `Sign: base64(HMAC-SHA256(body, loginDetails.secretkey))`
+- **LuxSMS v3 Flow**: Body `username`/`password` fields validated against operator-entered SharedPrefs values
+- **Blocking**: C2s DOWN/geo-blocked — cannot obtain `loginDetails.secretkey` for webhook auth
+- **Saved**: `data/json/vak88z2_extract/apk_credentials_2026-10-17.json`
+- **CWE**: CWE-798 (Hardcoded Credentials), CWE-200 (Information Exposure)
+
+### F98: Firebase RTDB Write Access — No Backend Trigger [CONFIRMED - LOW]
+- **Impact**: Player can write to 22 RTDB event paths; all writes succeed but NO MongoDB wallet sync
+- **Tested Paths**: wallet, DEPOSIT_APPROVE, DEPOSIT_CONFIRM, TRANSACTION_DEPOSIT, deposits, transactions, wallet_history, UPDATE_WALLET, VERIFY_DEPOSIT_GATEWAY
+- **Result**: All writes return 200; RTDB shows injected values (balance:500.07); mgapi wallet stays at 0.07 THB
+- **Root Cause**: No Cloud Functions deployed; Firestore API disabled; RTDB is frontend display cache only
+- **Architecture**: Backend writes to RTDB → Frontend reads; NO reverse path
+- **WSS**: All APIs return 401 at WebSocket handshake; Auth header causes 404 (CF routing)
+- **CWE**: CWE-284 (Improper Access Control — writable but no impact)
+
+### F99: JWT HS256 Not Crackable — Strong Secret [INFO]
+- **Test**: hashcat mode 16500 with rockyou (14.3M passwords) → Exhausted, 0 cracked
+- **Speed**: 10.9 MH/s GPU accelerated, completed in ~2 seconds
+- **Conclusion**: JWT secret not in common wordlists; likely long random/complex key
+- **Shared secret**: F89 confirms cross-tenant JWT acceptance — all tenants use same HS256 secret
+
+### F100: BOLA — Additional Settlement + Gateway Endpoints + 597 BO Routes [CONFIRMED - MEDIUM]
+- **Impact**: 2 more BOLA endpoints exposed + 597 BO API routes extracted from manage panel JS bundle
+- **New endpoints**:
+  - `/bo/info/withdraw-settlement` → 8 withdrawal channels (2 gateways: MYPAYS24, ONE2P + 6 banks: BAY, KBANK, GSB, KKP, LHBANK, SCB) with UUIDs
+  - `/bo/info/settlement-gateway-name` → 4 auto-withdrawal gateways: "ALPHA ถอนออโต้", "AUTO POMPAY", "Mypay24", "One2p WITHDRAW"
+- **JS Bundle analysis** (manage.vak88z2.com/_nuxt/649fef7.js):
+  - 597 unique `/bo/*` routes extracted
+  - Frontend mock auth found: `admin@themesbrand.com / 123456` (localStorage mock, NOT real backend auth)
+  - Vuex mutations: SET_ADMIN_FOLLOW_UP_CHANNEL, SET_ADMIN_FOLLOW_UP
+- **Total BOLA endpoints**: 48+ confirmed accessible with player JWT
+- **Saved**: `data/json/vak88z2_extract/bo_new_bola_2026-10-17.json`, `bo_routes_from_js_2026-10-17.json`
+- **CWE**: CWE-639 (Authorization Bypass), CWE-200 (Information Exposure)
