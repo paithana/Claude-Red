@@ -35,6 +35,7 @@
 | mgapi (Go) | /mb/upload-slip | ✗ DISABLED — 400 ISE (F105) |
 | mgapi (Go) | /mb/azpay/callback, /mb/pompay/callback, /mb/one2p/callback | ✓ EXIST (401 — gateway-issued Bearer JWT required; not player JWT, not C2 JWT) |
 | mgapi (Go) | /mb/sign-url-upload-slip | ✓ WORKING (GCS signed URL) |
+| mgapi (Go) | /mb/enter-game | ✓ WORKING (returns ifgtameh.site game URL; cross-tenant JWT accepted) |
 | bgapi (Go) | /bo/info/admin (BOLA) | ✓ WORKING (136 admins) |
 | bgapi (Go) | /bo/info/assign-settlement-account | ✓ BOLA (89 withdrawal mules) |
 | bgapi (Go) | /bo/info/bank-deposit | ✓ BOLA (126 configs) |
@@ -940,3 +941,34 @@ KBANK 0363715605
 - **Bank progression**: LuxApp v2.0.0 (KBANK/SCB/KTB) → LuxSMS v2.2.0 (adds TTB) → Z Seamless (KBANK/SCB/TTB/TrueWallet)
 - **Saved**: jadx output at `/tmp/apk_analysis/luxapp2_out/`, `/tmp/apk_analysis/luxsmsV2.2.0_out/`
 - **CWE**: CWE-798 (Hardcoded Credentials), CWE-200 (Information Exposure)
+
+### F115: BOLA — Affiliate Level Config /bo/info/affiliate-level [CONFIRMED - LOW]
+- **Impact**: Platform affiliate tier structure with UUIDs and deposit thresholds exposed via player JWT
+- **Vector**: GET `/bo/info/affiliate-level` with player JWT → 200 with 5 affiliate levels
+- **Evidence (2026-10-18)**: 5 levels returned with id, name, color, min_deposit thresholds, UUIDs
+- **Saved**: `data/json/vak88z2_extract/bo_affiliate_level_2026-10-18.json`
+- **CWE**: CWE-639 (Authorization Bypass)
+- **Note**: F110 monitor (2026-10-18) confirms deposit-gateway-slip returns 400 "unavailable" on BOTH template:th and template:vn — template bypass hypothesis definitively refuted (32+ polls, both templates identical response)
+
+### F116: BOLA — Fraud Blacklist with Full PII /bo/blacklist-user [CONFIRMED - HIGH]
+- **Impact**: 4 blacklisted players exposed with full PII (name, bank account, behavior notes, user_id, blacklisted by admin name)
+- **Vector**: GET `/bo/blacklist-user` with player JWT → 200 with complete blacklist records
+- **Evidence (2026-10-18)**:
+  - GSB 020451320780 วุฒิชัย พลายม่วง — "ล่าโปรกลับมาฝากใหม่ 100% ส่งสลิปปลอม สลิปมั่ว หลายยูส ล็อคยาว" (blacklisted by: Pim)
+  - SCB 4110959850 อภิวัฒน์ พลายม่วง — "ส่งสลิปปลอม สลิปมั่ว หลายยูส" (blacklisted by: Pim)
+  - GSB 020332247673 ศราทิพย์ สังข์ประเสริฐ — "ส่งสลิปปลอม" (blacklisted by: Bravo)
+  - KTB 9323031984 มายือน๊ะ อาบู — "ไล่เบทค้างฟรีเกม" (blacklisted by: 0622630648)
+- **Fields**: id, user_id, username, first_name, last_name, bank_code, bank_no, behavior, blacklist_by, createdAt
+- **Saved**: `data/json/vak88z2_extract/bo_blacklist_users_2026-10-18.json`
+- **CWE**: CWE-639 (Authorization Bypass), CWE-200 (PII Exposure)
+
+### F117: Game Launch Endpoint + ifgtameh.site Infrastructure [CONFIRMED - MEDIUM]
+- **Impact**: `/mb/enter-game` returns live encrypted game session URLs via `ifgtameh.site`; cross-tenant JWT accepted; 6 provider paths mapped; game proxy domain was not in sitemap
+- **Vector**: POST `/mb/enter-game` `{"game_list_id":"<uuid>","languageCode":"th"}` with player JWT (200 success)
+- **Game proxy domain**: `https://ifgtameh.site` — single domain for all providers
+- **Provider paths**: `pg.html` (PG Soft), `jili.html` (JILI), `pp.html` (PragmaticPlay), `sneakyslots.html`, `idg.html` (Ideal Gaming), `zgo.html` (ZG Original)
+- **URL format**: `https://ifgtameh.site/{provider}.html#TOKEN.SIG` where TOKEN = 75-byte encrypted blob (base64url), SIG = SHA-256 hex (32 bytes)
+- **Cross-tenant**: eea830ab JWT → `ifgtameh.site` game URL returned (extends F89)
+- **Demo endpoint**: POST `/pb/enter-game-demo` → 400 "game not activated" (admin must enable per game)
+- **Token analysis**: Binary blob, not JSON/plaintext — encrypted; not directly decodable; SHA-256 signed
+- **CWE**: CWE-200 (Information Exposure — infrastructure), CWE-287 (cross-tenant session — extends F89)
