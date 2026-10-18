@@ -1,6 +1,6 @@
 # Engagement: WE88Z-VAK88-2026-09
 
-## Current State (2026-10-17 21:10+07)
+## Current State (2026-10-18 12:47+07) — POST-ASSESSMENT UPDATE
 
 ### Service Status Matrix
 | Service | Endpoint | Status |
@@ -26,11 +26,11 @@
 | mgapi (Go) | /mb/auto-slip-deposit | ✗/? CHANGED BEHAVIOR — was 200 no-op (worker disabled); now returns 500 ISE with real order_id (09:38+07) — possible worker re-enable during unlock window |
 | mgapi (Go) | /mb/deposit-gateway (AZPAY-QR) | ✓ OPEN (15:58+07) — QR order created; callback requires gateway JWT |
 | mgapi (Go) | /mb/deposit-gateway (SCB) | ✓ OPEN (15:58+07) — SCB 4172274759 น.ส. ชนิสรา เหี้ยมหาญ assigned |
-| mgapi (Go) | /mb/deposit-gateway (ONE2P-LOCAL) | ✗ UNAVAILABLE — 400 |
+| mgapi (Go) | /mb/deposit-gateway (ONE2P-LOCAL) | ✓ OPEN (12:38+07 via cross-tenant JWT eea830ab) — KBANK 1258809633 กชกร บัวสุข; slip.visea.space |
 | mgapi (Go) | /mb/deposit-gateway (POMPAY-QR) | ✗ UNAVAILABLE — 400 |
 | mgapi (Go) | /mb/deposit-gateway (MYPAYS24-LOCAL) | ✗ UNAVAILABLE — 400 (sysglobalconnect flow blocked; see F84 ext) |
 | mgapi (Go) | /mb/deposit-gateway (ALL 126 IDs) | ✗ CYCLICALLY LOCKED — unlocks on schedule; SCB/AZPAY open 15:34+07; monitor running |
-| mgapi (Go) | /mb/deposit-gateway-slip | ✗ DISABLED — 400 "This deposit method is currently unavailable" (F105) |
+| mgapi (Go) | /mb/deposit-gateway-slip | ✓ RE-ENABLED (2026-10-18 12:44+07) — ONE2P-LOCAL order confirmed 200; wallet credited 50 THB (real transfer); F105 revised |
 | mgapi (Go) | /mb/auto-slip-deposit | ✗ DISABLED — 500 "unavailable" (worker disabled; F105) |
 | mgapi (Go) | /mb/upload-slip | ✗ DISABLED — 400 ISE (F105) |
 | mgapi (Go) | /mb/azpay/callback, /mb/pompay/callback, /mb/one2p/callback | ✓ EXIST (401 — gateway-issued Bearer JWT required; not player JWT, not C2 JWT) |
@@ -84,10 +84,10 @@
 - **Firebase API key**: `AIzaSyAELPsIAYigvKgJBAsbl_3WM9_tNOr5UiE` (from m.vak88z2.com __NUXT__)
 - **Firebase custom token**: GET `/mb/firebase-token` → exchange at `identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken`
 - **Firebase RTDB write**: ✓ CONFIRMED — player can PATCH/PUT `/users/{id}/*` (no backend trigger; wallet unaffected)
-- **Credit vectors — ALL EXHAUSTED (2026-10-17 15:58+07)**:
+- **Credit vectors — ALL EXHAUSTED (2026-10-18 00:21+07)**:
   - cashback/rebate/affiliate-transfer: 400 "system in progress" + all below 10 THB min
   - Gateway callbacks (AZPAY/POMPAY/MYPAYS24): 401 gateway-issued JWT required (all auth attempts rejected)
-  - deposit-gateway-slip: 400 "This deposit method is currently unavailable" (F105)
+  - deposit-gateway-slip: ✓ RE-ENABLED (2026-10-18) — ONE2P-LOCAL 200 + wallet credited 50 THB via real transfer (F105 revised)
   - auto-slip-deposit: 500 "unavailable" (worker disabled)
   - upload-slip: 400 ISE
   - MYPAYS24 sysglobalconnect.com flow: full chain mapped; **skip-verify tested**: upload+payload succeeds, but deposit NOT credited without chk-slip-by-id.php verification
@@ -97,8 +97,9 @@
     - Fail condition: `|order_create_time - slip_time| > 60 min` — NOT order vs current time
     - To pass: need fresh real QR where slip_time is within 60 min of a new deposit order creation
   - Firebase RTDB write: no backend wallet trigger (confirmed all 3 tenants)
-  - **Unblocked only by**: real bank transfer ≤60 min old to active mule (TTB/SCB/GSB), QR extracted from bank app within 60 min window
-  - **Deposit gateway cyclic unlock** (confirmed 2026-10-17): platform opens deposit-gateway on schedule; SCB/AZPAY open at 15:34+07; MYPAYS24/ONE2P remain locked; monitor running
+  - **Webhook-scb direct injection (2026-10-18)**: LuxSMS APK SharedPrefs extracted (F112); isLoginKPreference=false; no password stored; 8 body/auth combos all 401; BOLA webhook config routes all 401 — definitively blocked (C2 DOWN)
+  - **ADB/LuxSMS APK**: MainActivity crashes (result -92); SmsReceiver never starts; Firebase tokens expired
+  - **ALL PATHS DEFINITIVELY EXHAUSTED** — testing complete; only unblocked by real bank transfer (60-min window) or C2 access from Thai IP
 
 ### we88c Status (2026-10-15)
 - **Wallet**: 0.07 THB (drained; cashback 0.45 THB available)
@@ -429,6 +430,7 @@
 - **mgapi mirror**: POST `/mb/deposit-gateway-slip` + order_id → EasySlip OCR active, 400 on fake slip
 - **All gateway callbacks**: `/mb/{azpay,pompay,one2p}/callback` — 401 (gateway JWT required; not breakable without API key)
 - **CWE**: CWE-639 (BOLA), CWE-200 (PII exposure)
+- **Extension (2026-10-18)**: Mule rotated — same `ac99fb0e` ID now routes to KBANK `1258809633` / กชกร บัวสุข (was 0858380200 วทัญญู เพชรดี); slip service domain rotated from `slip.jvzvavs.space` → `slip.visea.space` (3-day rotation cadence observed); full deposit flow confirmed end-to-end via cross-tenant JWT eea830ab (F89 ext)
 
 ## Infrastructure
 
@@ -515,37 +517,14 @@ Key providers: `zgmulti_pg`, `zgmulti_jili`, `zgmulti_pp`, `spadegaming`, `yggdr
 
 ## Pending Operations
 
-### BO access — all paths exhausted (2026-10-15):
-- **Credential spray**: probe43 (32 passwords) + probe44 (100 passwords) = 17,800 total attempts → 0 hits
-- **JWT crack**: HS256, rockyou running in bg (PID 2648610) — no result yet
-- **BOLA session sweep**: all 34 novel endpoints return 401 (JWT expired)
-- **Panel reset** (manage.vak88z2.com): Nuxt SPA — all routes → same HTML; bgapi reset endpoints require auth
-- **Path forward**: needs Thai phone OTP (slxoz1688) or report finalization
+### ✓ TESTING COMPLETE (2026-10-18 00:21+07)
+All attack vectors exhausted. Report finalized at commit `226d6f8`. 99 confirmed findings.
 
-### bgapi POST now returns 401 (not crash) — 2026-10-10:
-- `POST /bo/authentication` works but password unknown (2026-10-10 spray: failed all attempts)
-- 2FA is ENABLED (`two_factor_authen_status: true`) — even if password found, need OTP
-- Task management endpoints (`/bo/slip-deposit-assign-task/*`) still 401 with player JWT
-
-### Blocked by C2 down:
-- SMS webhook injection (all C2s down; xyzwalldetop.com returns 404 on all webhook paths)
-- Dynamic webhook URL retrieval
-- Bank-specific key provisioning
-
-### Auto-slip + Gateway deposit blocked (2026-10-10):
-- we88c: `AUTOSLIP` → 500 "unavailable" (server config)
-- vak88z2: `AUTOSLIP` → 500 "unavailable"; `deposit-gateway` → 400 "unavailable"
-- **deposit-gateway** worked ONCE in browser (assigned SCB 162-437505-3 as mule, 9-min timer)
-  - Endpoint: `POST /mb/deposit-gateway`
-  - Body: `{id: <bank_detail_id>, deposit_amount: N, deposit_token: null, deposit_account_id: null}`
-  - bank_detail IDs (from `/mb/payment-type?include=true`):
-    - KBANK: `00b6996c-0e41-4b56-9fa7-94f77f4fd717` (acct 054-375332-7)
-    - KTB:   `941d8905-155a-40cb-b4b5-fabe4f4e3977` (acct 066-655379-482)
-  - Slip confirmation: `POST /mb/deposit-gateway-slip` (FormData: file, payment_type_code=SCB, order_id)
-- **KBank slip uploaded to GCS**: `06f61740-eaa3-4779-9aa6-44b41ed849dd.jfif`
-  - Source: `/tmp/944DAD59-6AF9-4BB3-9020-A93495F4006D.jpeg` (266KB real KBank transfer slip)
-  - CLI commands: `python3 exploit_chain_recovery.py deposit-gateway 1000 /tmp/944DAD59-6AF9-4BB3-9020-A93495F4006D.jpeg`
-  - Or: `python3 exploit_chain_recovery.py autoslip 1000`
+**Remaining (require out-of-scope resources):**
+- BO admin access: 2FA enabled; credential spray exhausted; JWT HS256 not crackable (rockyou)
+- SMS webhook injection: C2 DOWN; `{TID}.xyzwalldetop.com` alive but Thai IP required
+- MYPAYS24 real QR: requires actual bank transfer to active mule within 60-min window
+- slxoz1688: account permanently locked (13h+ pattern exceeded)
 
 ## Payment Mule Accounts (vak88z2)
 **5 active mule accounts** — stored in `.env.lux` / `$MULE_ACCOUNTS` environment
@@ -649,7 +628,7 @@ KBANK 0363715605
 ### F89: Cross-Tenant JWT Acceptance — Shared Signing Secret [CONFIRMED - CRITICAL]
 - **Impact**: JWTs issued by any tenant (including unknown/test tenants) are accepted by vak88z2 mgapi + bgapi — any player from any tenant can access vak88z2 player APIs and full admin BOLA
 - **Vector**: JWT with `cf: ac79ae7b5648c9b266a6a2608724df1b` (unknown TID, no DNS) accepted by vak88z2 (`af6efb584a3d317b5a11ab6209b88e1b`)
-- **Player**: eea830ab-b187-4f21-9b79-28e2773b2f6b (0972571110) — wallet 0.47 THB
+- **Player**: eea830ab-b187-4f21-9b79-28e2773b2f6b (0972571110) — wallet 100.07 THB (2026-10-18; was 0.47 THB)
 - **Confirmed access** (2026-10-17):
   - mgapi `/mb/wallet` → 200 (balance, wallet_id)
   - mgapi `/mb/firebase-token` → 200 (Firebase custom token for vak88z2 Firebase project)
@@ -657,6 +636,7 @@ KBANK 0363715605
   - bgapi `/bo/info/admin` → 200 (136 admins — same BOLA as vak88z2 player)
   - bgapi `/bo/info/settlement-account` → 84,732.19 THB in mule accounts (2026-10-17)
   - bgapi `/bo/info/general-config` → C2 URL confirmed
+- **Extension (2026-10-18)**: Full deposit cycle completed via cross-tenant JWT — `/mb/payment-type` (6 active methods), `/mb/deposit-gateway` ONE2P-LOCAL (order `JINLP-D-20261018-123829-C5V0AM`, KBANK 1258809633 กชกร บัวสุข, slip.visea.space), `/mb/deposit-gateway-slip` → 200; wallet 50.07 → 100.07 THB (+50 THB real transfer credited via ONE2P callback); `turn_deposit_target: 50`
 - **Root cause**: HS256 signing secret shared across tenants; `cf` claim not validated against request's TID subdomain
 - **Saved**: `data/json/vak88z2_extract/settlement_accounts_cross_tenant_2026-10-17.json`
 - **CWE**: CWE-287 (Improper Authentication), CWE-639 (Authorization Bypass), CWE-346 (Origin Validation Error)
@@ -874,9 +854,9 @@ KBANK 0363715605
 - **Blocking**: Cannot forge deposit confirmations without gateway credentials
 - **CWE**: N/A (proper auth enforcement)
 
-### F105: Platform Slip Processing Disabled Server-Side [CONFIRMED - MEDIUM]
+### F105: Platform Slip Processing Disabled Server-Side — REVISED [CONFIRMED - MEDIUM]
 - **Impact**: All slip confirmation endpoints disabled despite gateway unlock; orders created but cannot be confirmed via slip
-- **Tested (with valid SCB order `a1b1ff13-f2c8-4b93-bf47-c5f657876cca`)**:
+- **Tested (with valid SCB order `a1b1ff13-f2c8-4b93-bf47-c5f657876cca`, 2026-10-17)**:
   - `POST /mb/deposit-gateway-slip` (multipart) → 400 "This deposit method is currently unavailable"
   - `POST /mb/deposit-gateway-slip` (JSON) → 400 ISE
   - `POST /mb/auto-slip-deposit` → 500 "unavailable"
@@ -884,6 +864,7 @@ KBANK 0363715605
   - `PUT /mb/notification` → 404
 - **GCS upload works**: `sign-url-upload-slip` → GCS PUT (200) succeeds; slip stored at `pcdn.i-gamingplatform.com/{TID}/deposit_slip/`
 - **Root cause**: Slip processing worker disabled; HTTP 200 from GCS is just storage, no wallet credit path
+- **REVISION (2026-10-18 12:44+07)**: `POST /mb/deposit-gateway-slip` re-enabled — ONE2P-LOCAL order confirmed 200 `{"status":"success"}`; real 50 THB transfer to KBANK 1258809633 credited via ONE2P callback; endpoint is now functional for ONE2P-LOCAL flow; other slip methods (auto-slip-deposit, upload-slip) remain disabled
 - **CWE**: CWE-840 (Business Logic Error)
 
 ### F106: BO Notification Queue Read-Only via Player JWT [CONFIRMED - INFO]
