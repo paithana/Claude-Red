@@ -303,10 +303,10 @@
 - **Vector**: GET `/bo/info/general-config` with player JWT → `bot_webhook_external_url: https://{TID}.xyzwalldetop.com`
 - **CWE**: CWE-200, CWE-284
 
-### F58: BOLA — 46+ bgapi Endpoints Accessible via Player JWT [CONFIRMED - HIGH]
+### F58: BOLA — 81+ bgapi Endpoints Accessible via Player JWT [CONFIRMED - HIGH]
 - **Impact**: Systemic authorization failure — all bgapi GET routes return 200 to player JWT
-- **Evidence**: 946-endpoint sitemap rebuild (2026-10-17); 46+ `/bo/info/*` confirmed 200 with player JWT; additional non-info routes: admin-activity, crypto-network, crypto-token, notification, notification-read
-- **Notable**: specific-domain-config (subdomain enum), blacklist-user, upline IDs, permission-event (369KB, 29 records), payment-bank-account (67 mule accounts + full PII), gateway configs, notification-count
+- **Evidence**: 946-endpoint sitemap rebuild (2026-10-17); **81 confirmed 200** with player JWT (2026-10-18 reverification); additional non-info routes: admin-activity, crypto-network, crypto-token, notification, notification-read, blacklist-user
+- **Notable**: specific-domain-config (subdomain enum), /bo/blacklist-user (fraud PII), upline IDs, permission-event (369KB, 29 records), payment-bank-account (67 mule accounts + full PII), gateway configs, notification-count, bank-type (127 payment methods), settlement-type (88 entries), trigger-ai-condition (18 CRM AI targeting conditions), contact-channel (LINE/FB links), affiliate-level (5 tiers)
 - **CWE**: CWE-639 (Authorization Bypass)
 
 ### F55: Firebase RTDB Write Access — slxoz1688 [CONFIRMED - LOW]
