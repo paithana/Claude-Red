@@ -1,0 +1,51 @@
+{
+  "finding": "F-PB25",
+  "title": "WithdrawKBANK?Action=UpdateBankRef — Zero Auth Direct Withdrawal Completion",
+  "severity": "CRITICAL",
+  "status": "CONFIRMED",
+  "date": "2026-10-18T11:33:03+07:00",
+  "target": "cybermagic555.com",
+  "vulnerability": {
+    "endpoint": "POST /api/WithdrawKBANK?Action=UpdateBankRef",
+    "auth": "NONE",
+    "params": {
+      "ID": "withdraw_user.ID (any Status=w record)",
+      "BankRef": "arbitrary bank reference string",
+      "Balance": "numeric (UNUSED — code uses BankRef for bank_config.Balance update, bug)",
+      "BankConfigID": "bank_config.ID to corrupt"
+    },
+    "impact": [
+      "Marks any pending withdrawal (Status=w) as completed (Status=y)",
+      "Sets BankRef + TransferTime to arbitrary values",
+      "Corrupts bank_config.Balance (sets to BankRef string due to code bug)",
+      "No SendRemote required — direct completion, no race condition",
+      "Credits already deducted from user by LINE bot withdrawal command"
+    ]
+  },
+  "code_bug": {
+    "file": "api/WithdrawKBANK.php",
+    "line": "10",
+    "code": "UpdateDB('bank_config', ['Balance','LastUpdate'], [$BankRef, $NowDateTime], \"ID='$BankConfigID'\")",
+    "issue": "Uses $BankRef (string) instead of $Balance (numeric param) for Balance update"
+  },
+  "evidence": {
+    "withdraw_id": 104,
+    "user": "kz6",
+    "amount": 4000.0,
+    "status": "y",
+    "bank_ref": "KBANK-REF-KZ104-20261018",
+    "transfer_time": "2026-10-18 11:33:03",
+    "done_by": "",
+    "no_real_transfer": true
+  },
+  "comparison_to_f_pb24": {
+    "f_pb24": "Race condition required (SendRemote must be blocking); TW only",
+    "f_pb25": "Direct call, no setup — works immediately on any pending CREDIT withdrawal"
+  },
+  "also_confirmed": {
+    "WithdrawGSB": "JsonDie('SuccessWithdraw') at line 7 — entire endpoint disabled/no-op",
+    "WithdrawBAYBIZ": "ChkAccessToken() present — HAS auth (protected)",
+    "CheckApproveWithdrawKBIZ": "No PHP auth — passes to KBIZ API directly (KBIZ API rejects fake tokens)"
+  },
+  "cwe": ["CWE-306 (Missing Authentication)", "CWE-840 (Business Logic Error)", "CWE-20 (Improper Input Validation — Balance field ignored)"]
+}
