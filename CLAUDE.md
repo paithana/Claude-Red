@@ -890,6 +890,33 @@ KBANK 0363715605
 - **Extends**: F80, F98
 - **CWE**: CWE-284 (Improper Access Control — writable but no impact)
 
+### F113: Unauthorized KBank K+ API Client in Public GCS — kplusgen APK [CONFIRMED - CRITICAL]
+- **Impact**: Platform publicly distributes a fully functional unauthorized KBank K+ API client (`app-release.apk`, 42MB) in `gs://luxino-public/AppV2/` — can authenticate with KBank's real API, verify PINs, and generate real bank transfer slips with embedded PromptPay QR codes; hardcoded FCM device token exposed
+- **APK**: `gs://luxino-public/AppV2/app-release.apk` — package `abc.kplusgen.kplusgen`, label "kplusgen", Dart/Flutter with Go JNI library `libgojni.so`
+- **Developer trail**: `dep kplus v0.0.0 => /Users/codecracker/Desktop/kplusgen/libkplus` (Go module path in binary)
+- **KBank API endpoints** (hardcoded in `libgojni.so`):
+  - `https://rt10.kasikornbank.com/kplus-service` — KBank K+ production API
+  - `https://android.clients.google.com/checkin` — GCM device registration
+- **Core API flow** (from Go binary JSON fields):
+  1. `Generator.register(mobileNo, pin, gcmToken)` → calls KBank's `securityVerifyPin` endpoint
+  2. On success, returns `SecurityVerifyPinResponseData` including `seasonalSlipUrl`
+  3. `seasonalSlipUrl` / `seasonalSlipData` = real KBank transfer receipt URL with embedded PromptPay QR at current timestamp
+- **JSON fields extracted**: `mobileNo`, `pin`, `accountNumber`, `kMerchantAccount`, `seasonalSlipUrl`, `seasonalSlipData`, `seasonalSlipModifyDateTime`, `accountList`, `limitAmount`, `registeredAccount`
+- **Hardcoded FCM token** (in `libgojni.so`): `APA91bERHTLhgjF4tf9i_awgjIXsGGjDjd1th67mGcowVvPBsoI-vQ3c_wXzwKDvCfRonRd4wDPQYYwpKlYbEtPAo71CEhRe0086bASm218cK_S-HdOF8Lw347zakP9rZI-EYroej2LY` (fake device identity for KBank registration)
+- **Slip bypass relevance**: `seasonalSlipUrl` from a real transfer would contain a current-timestamped QR code → would pass sysglobalconnect's 60-min window check; requires valid KBank mule account K+ credentials
+- **CWE**: CWE-798 (Hardcoded Credentials), CWE-200 (Information Exposure), CWE-285 (Improper Authorization — unauthorized access to banking API)
+
+### F114: JPEG Slip Injection — ImageTragick Surface Assessment [INFO]
+- **Question**: Can a polyglot JPEG (nc reverse shell in EXIF/ImageMagick payload) execute server-side in the slip upload chain?
+- **sysglobalconnect `upload-slip-by-id.php`**:
+  - Stores JPEG (field: `file`); QR string sent separately via `update-payload.php`
+  - `chk-slip-by-id.php` validates QR string against external bank API — image NOT passed to bank API
+  - If PHP calls `identify`/`convert` (ImageMagick) on stored image → CVE-2016-3714 (ImageTragick) possible → RCE on sysglobalconnect's server (not Luxino)
+  - **Could not confirm** without probe (out-of-scope third party)
+- **mgapi Go backend (`/mb/sign-url-upload-slip` → GCS)**: mgapi never processes JPEG content; only signs storage URL; no execution path
+- **EasySlip (`/mb/deposit-gateway-slip`)**: OCR-active, rejects non-real slips; any polyglot would also fail OCR validation
+- **Verdict**: No server-side execution path on Luxino's own infrastructure; sysglobalconnect surface plausible but unconfirmed and affects third party
+
 ### F109: Additional APK Analysis — TTB Webhook + C2 Endpoints [CONFIRMED - MEDIUM]
 - **Impact**: 2 additional APKs analyzed; TTB (TMB Thanachart) bank webhook endpoint discovered; full C2 API structure confirmed
 - **APKs analyzed** (2026-10-17):
