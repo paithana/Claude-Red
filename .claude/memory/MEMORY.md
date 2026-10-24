@@ -1,9 +1,9 @@
 # Memory Index (Consolidated)
 
-## Pentest (Platform A/B)
-- [Engagement: WE88Z-VAK88-2026-09](engagement_lux.md) — Platform A (Luxino/vak88z); **133 findings** (F01–F133, F130 retracted); report at `reports/WE88Z-VAK88-2026-10-06-DRAFT.md`; F133: LuxSms-v3 APK full SMS exfil architecture; active 2026-10-23
-- [Platform B: Kaichon/CyberPlus](platform_b_kaichon.md) — 21 confirmed Platform B findings (F-PB01–F-PB21); LINE God Mode, GTID SQLi, full DB dumps, mule creds; cybermagic555.com alive
-- [Platform Architecture](platform_sms_intercept.md) — 3-platform SMS intercepter architecture (LUX/UFA/CTMX); attack flows per platform
+## Pentest (Platform A/B) [ENCRYPTED - passphrase: .kz_token]
+- [Engagement: WE88Z-VAK88-2026-09](engagement_lux.md.gpg) — Platform A (Luxino/vak88z); **133 findings**; ENCRYPTED
+- [Platform B: Kaichon/CyberPlus](platform_b_kaichon.md.gpg) — 21 confirmed Platform B findings; ENCRYPTED
+- [Platform Architecture](platform_sms_intercept.md.gpg) — SMS intercepter architecture; ENCRYPTED
 - [Feedback: Worktree Bash Restrictions](feedback_worktree.md) — Complex heredoc/inline Python blocked in worktree isolation; write scripts to scratchpad first
 - [EMVCo2 / Thai QR Format](EMVCo2_ref.md) — KBANK QR format decoded: 59-char, CRC-16/CCITT confirmed, ts9 structure, replay attack results
 - [CVE-2026-87902 rs24hr](cve_2026_87902_rs24hr.md) — WordPress page-template LFI; rs24hr not exploitable (Bricks theme + Cloudflare WAF)
